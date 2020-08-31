@@ -1,0 +1,41 @@
+{
+  "compileOnSave": true,
+  "compilerOptions": {
+    "declaration": false,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "incremental": true,
+    "inlineSourceMap": true,
+    "module": "commonjs",
+    "newLine": "lf",
+    "noFallthroughCasesInSwitch": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "outDir": "dist",
+    "pretty": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "stripInternal": true,
+    "strictPropertyInitialization": false,
+    "suppressImplicitAnyIndexErrors": true,
+    "target": "ES2018",
+    "tsBuildInfoFile": ".vscode/.tsbuildinfo",
+    "baseUrl": ".",
+    "paths": {
+      "@config/*": ["src/config/*"],
+      "@config": ["src/config"],
+      "@utils/*": ["src/app/utils/*"],
+      "@middleware/*": ["src/app/middleware/*"]
+    }
+  },
+  "include": ["src/**/*.ts", "src/typings.d.ts"],
+  "exclude": [
+    "app/public",
+    "app/views",
+    "dist",
+    "node_modules*",
+    "test",
+    "**/*.d.ts",
+    "**/*.spec.ts"
+  ]
+}

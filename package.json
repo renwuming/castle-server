@@ -1,0 +1,91 @@
+{
+  "name": "castle-server",
+  "version": "1.0.0",
+  "description": "server for the lost castle",
+  "private": true,
+  "dependencies": {
+    "@types/lodash": "^4.14.161",
+    "@types/mongoose": "^5.7.36",
+    "@types/uuid": "^8.3.0",
+    "egg-cors": "^2.2.3",
+    "egg-mongoose": "^3.3.0",
+    "egg-scripts": "^2.10.0",
+    "lodash": "^4.17.20",
+    "midway": "^1.0.0",
+    "mongoose": "^5.10.2",
+    "tsconfig-paths": "^3.9.0",
+    "uuid": "^8.3.0"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^9.1.2",
+    "@commitlint/config-angular": "^9.1.2",
+    "@commitlint/config-conventional": "^9.1.2",
+    "@types/mocha": "^5.2.7",
+    "@types/node": "^10.5.5",
+    "@waiting/eslint-config": "^2.1.0",
+    "cross-env": "^6.0.0",
+    "egg-ci": "^1.8.0",
+    "eslint": "^6.0.0",
+    "git-cz": "^4.7.1",
+    "husky": "^4.2.5",
+    "midway-bin": "1",
+    "midway-mock": "1",
+    "mocha": "^6.2.0",
+    "ts-node": "^8.3.0",
+    "tslib": "^1.8.1",
+    "typescript": "^3.5.0"
+  },
+  "engines": {
+    "node": ">=10.16.0"
+  },
+  "scripts": {
+    "commit": "git-cz",
+    "build": "midway-bin build -c",
+    "ci": "npm run cov",
+    "clean": "midway-bin clean",
+    "cov": "midway-bin cov --ts",
+    "debug": "cross-env NODE_ENV=local midway-bin debug --ts",
+    "dev": "cross-env NODE_ENV=local midway-bin dev --ts",
+    "devtest": "cross-env TS_NODE_PROJECT=test/tsconfig.json midway-bin test --ts",
+    "lint": "eslint --fix {src,test}/**/*.ts",
+    "start": "egg-scripts start --daemon --title=egg-server-castle-server --framework=midway --ts",
+    "start_build": "npm run build && cross-env NODE_ENV=development midway-bin dev",
+    "stop": "egg-scripts stop --title=egg-server-castle-server",
+    "test": "npm run lint && npm run devtest",
+    "autod": "midway-bin autod"
+  },
+  "ci": {
+    "version": "10, 12"
+  },
+  "midway-bin-clean": [
+    ".vscode/.tsbuildinfo",
+    "dist"
+  ],
+  "midway-bin-build": {
+    "include": [
+      "app/public",
+      "app/view"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "author": "renwuming",
+  "license": "MIT",
+  "commitlint": {
+    "extends": [
+      "@commitlint/config-conventional"
+    ]
+  },
+  "husky": {
+    "hooks": {
+      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
+    }
+  },
+  "config": {
+    "commitizen": {
+      "path": "cz-conventional-changelog"
+    }
+  }
+}
