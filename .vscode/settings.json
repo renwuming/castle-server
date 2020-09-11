@@ -23,7 +23,6 @@
     ".dockerignore": true,
     ".editorconfig": true,
     ".eslint*": true,
-    ".gitignore": true,
     ".githooks": true,
     ".npmignore": true,
     ".nyc_output": true,
