@@ -2,18 +2,45 @@ import { Context, controller, get, provide, post, inject } from "midway";
 import { GameService } from "./game.service";
 
 @provide()
-@controller("/game")
+@controller("/games")
 export class GameController {
-  @inject() private gameService: GameService;
+  @inject()
+  ctx: Context;
+  @inject()
+  private gameService: GameService;
   constructor() {}
 
-  @post("/", { middleware: ["apiMiddleware"] })
-  public async createGame(ctx: Context): Promise<void> {
-    ctx.body = await this.gameService.createGame();
+  @post("/", { middleware: ["authMiddleware", "apiMiddleware"] })
+  public async createGame(): Promise<void> {
+    this.ctx.body = await this.gameService.createGame();
   }
 
-  @get("/:id")
-  public async getGame(ctx: Context): Promise<void> {
-    ctx.body = "OK";
+  @get("/:id", { middleware: ["authMiddleware", "apiMiddleware"] })
+  public async getGame(): Promise<void> {
+    const { id } = this.ctx.params;
+    this.ctx.body = await this.gameService.getGame(id);
+  }
+
+  @post("/:id/join", { middleware: ["authMiddleware", "apiMiddleware"] })
+  public async joinGame(): Promise<void> {
+    const { id } = this.ctx.params;
+    await this.gameService.joinGame(id);
+    this.ctx.body = {};
+  }
+
+  @post("/:id/start", { middleware: ["authMiddleware", "apiMiddleware"] })
+  public async startGame(): Promise<void> {
+    const { id } = this.ctx.params;
+    await this.gameService.startGame(id);
+    this.ctx.body = {};
+  }
+
+  // 玩家走棋
+  @post("/:id", { middleware: ["authMiddleware", "apiMiddleware"] })
+  public async updateGame(): Promise<void> {
+    const { id } = this.ctx.params;
+    const round: Round = this.ctx.request.body;
+    await this.gameService.updateGame(id, round);
+    this.ctx.body = {};
   }
 }

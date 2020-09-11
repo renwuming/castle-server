@@ -3,7 +3,7 @@ type PropConfig = {
   count: number;
 };
 
-export const initPropsConfig: PropConfig[] = [
+export const propsConfig: PropConfig[] = [
   // 装备
   {
     data: {
@@ -227,5 +227,24 @@ export const initPropsConfig: PropConfig[] = [
       status: -1,
     },
     count: 1,
+  },
+];
+
+export const startLocations: number[] = [0, 7, 56, 63];
+
+export const selectShieldList: Prop[] = [
+  {
+    name: "刃",
+    imgUrl: "https://cdn.renwuming.cn/static/escape/e-2-0.jpg",
+    imgHdUrl: "https://cdn.renwuming.cn/static/escape/e-2-0-hd.jpg",
+    key: "e-2",
+    status: 0,
+  },
+  {
+    name: "盾",
+    imgUrl: "https://cdn.renwuming.cn/static/escape/e-2-1.jpg",
+    imgHdUrl: "https://cdn.renwuming.cn/static/escape/e-2-1-hd.jpg",
+    key: "e-2",
+    status: 1,
   },
 ];

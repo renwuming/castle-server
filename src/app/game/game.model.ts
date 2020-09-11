@@ -5,14 +5,15 @@ import { getModel } from "@utils/mongoose";
 export class GameModel {
   private schemaDefination = {
     _id: String,
+    ownPlayer: String,
     currentPlayer: Number,
     start: Boolean,
     startedAt: Date,
     end: Boolean,
+    endedAt: Date,
     winner: Number,
     cards: Array,
     players: Array,
-    roundIndex: Number,
     roundData: Object,
     roundHistory: Array,
   };
