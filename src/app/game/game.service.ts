@@ -1,9 +1,9 @@
 import { provide, inject, Context } from "midway";
 import { v4 } from "uuid";
-import { propsConfig, startLocations } from "src/lib/gameHelper";
+import { propsConfig, startLocations } from "@/lib/gameHelper";
 import { shuffle } from "lodash";
 import { GameBaseService } from "./game.base.service";
-import { Utils } from "src/lib/utils";
+import { Utils } from "@/lib/utils";
 import { UnprocessableEntityError, BadRequestError } from "egg-errors";
 import { MoveService } from "./move.service";
 

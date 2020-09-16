@@ -35,6 +35,7 @@
     "midway-bin": "1",
     "midway-mock": "1",
     "mocha": "^6.2.0",
+    "module-alias": "^2.2.2",
     "ts-node": "^8.3.0",
     "tslib": "^1.8.1",
     "typescript": "^3.5.0"
@@ -53,7 +54,7 @@
     "devtest": "cross-env TS_NODE_PROJECT=test/tsconfig.json midway-bin test --ts",
     "lint": "eslint --fix {src,test}/**/*.ts",
     "start": "egg-scripts start --daemon --title=egg-server-castle-server --framework=midway --ts",
-    "start_build": "npm run build && cross-env NODE_ENV=development midway-bin dev",
+    "start_build": "npm run build && cross-env NODE_ENV=production npm run start",
     "stop": "egg-scripts stop --title=egg-server-castle-server",
     "test": "npm run lint && npm run devtest",
     "autod": "midway-bin autod"

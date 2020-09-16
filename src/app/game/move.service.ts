@@ -1,6 +1,6 @@
 import { provide, inject } from "midway";
-import { selectShieldList } from "src/lib/gameHelper";
-import { Utils } from "src/lib/utils";
+import { selectShieldList } from "@/lib/gameHelper";
+import { Utils } from "@/lib/utils";
 
 @provide()
 export class MoveService {

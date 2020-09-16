@@ -1,5 +1,5 @@
 import { provide } from "midway";
-import { getModel } from "@utils/mongoose";
+import { getModel } from "@/app/utils/mongoose";
 
 @provide()
 export class GameModel {

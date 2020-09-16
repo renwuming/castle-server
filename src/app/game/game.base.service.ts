@@ -1,4 +1,4 @@
-import BaseService from "@utils/common.base.service";
+import BaseService from "@/app/utils/common.base.service";
 import { GameModel } from "./game.model";
 import { provide, inject } from "midway";
 

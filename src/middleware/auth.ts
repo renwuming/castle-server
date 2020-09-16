@@ -6,7 +6,7 @@ import {
   config,
   Context,
 } from "midway";
-import { UserService } from "src/app/user/user.service";
+import { UserService } from "@/app/user/user.service";
 import { UnauthorizedError } from "egg-errors";
 
 @provide()

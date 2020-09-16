@@ -19,13 +19,9 @@
     "strictPropertyInitialization": false,
     "suppressImplicitAnyIndexErrors": true,
     "target": "ES2018",
-    "tsBuildInfoFile": ".vscode/.tsbuildinfo",
     "baseUrl": ".",
     "paths": {
-      "@config/*": ["src/config/*"],
-      "@config": ["src/config"],
-      "@utils/*": ["src/app/utils/*"],
-      "@middleware/*": ["src/app/middleware/*"]
+      "@/*": ["src/*"]
     }
   },
   "include": ["src/**/*.ts", "src/typings.d.ts"],
