@@ -27,7 +27,6 @@ interface Game {
   start: boolean;
   startedAt: Date;
   players: Player[];
-  currentPlayer: number;
   roundData: Round;
   // 结束后需要更新的属性
   end: boolean;
@@ -43,11 +42,15 @@ type RoundStatus = -1 | 0 | 1 | 2; // 枚举值，-1 未移动，0 完成移动�
 interface Round {
   player: number;
   status: RoundStatus;
+  canMoveLocations: number[];
+  canAttackLocations: number[];
   startLocation: number;
   targetLocation?: number;
   endLocation?: number;
   prop?: Prop;
   selectProps?: Prop[];
+  throwProps?: Prop[];
+  end?: boolean; // 回合是否结束
 }
 
 interface Player {

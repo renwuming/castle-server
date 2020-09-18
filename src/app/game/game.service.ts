@@ -5,7 +5,7 @@ import { shuffle } from "lodash";
 import { GameBaseService } from "./game.base.service";
 import { Utils } from "@/lib/utils";
 import { UnprocessableEntityError, BadRequestError } from "egg-errors";
-import { MoveService } from "./move.service";
+import { PlayerService } from "./player.service";
 
 @provide()
 export class GameService {
@@ -16,7 +16,7 @@ export class GameService {
   @inject()
   gameBaseService: GameBaseService;
   @inject()
-  moveService: MoveService;
+  playerService: PlayerService;
 
   /**
    * 创建游戏
@@ -86,9 +86,8 @@ export class GameService {
         updates: {
           start: true,
           players: startPlayers,
-          currentPlayer: 0,
           startedAt: new Date(),
-          roundData: this.initRound(startPlayers[0]),
+          roundData: this.initRound(startPlayers[0], startPlayers),
         },
       });
     }
@@ -101,12 +100,13 @@ export class GameService {
       cards,
       start,
       end,
+      roundHistory,
     } = await this.gameBaseService.getById(id);
     // game未开始或已结束
     if (!start || end) {
       throw new BadRequestError("游戏未开始或已结束");
     }
-    const { status, player } = roundData;
+    const { status, player, canMoveLocations } = roundData;
     const currentPlayer = players[player];
     const { _id, location } = currentPlayer;
     // 判断是否当前行动玩家
@@ -116,51 +116,111 @@ export class GameService {
     // 未移动
     if (status === -1) {
       const { targetLocation } = round;
-      if (!targetLocation) {
+      if (!targetLocation || !canMoveLocations.includes(targetLocation)) {
         throw new BadRequestError("参数无效");
       }
-      // 先翻开卡片
-      const { prop, selectProps } = this.moveService.openCard(cards, location);
-      cards[location].open = true;
-      // 再移动
-      const endLocation = this.moveService.move(
+      // 更新targetLocation
+      roundData.targetLocation = targetLocation;
+      // 翻开卡片
+      const { prop, cards: newCards } = this.playerService.openCard(
+        cards,
+        location
+      );
+      // 移动，并获取道具
+      const newCurrentPlayer = this.playerService.moveAndPickProp(
         currentPlayer,
         players,
         targetLocation,
         prop
       );
-      currentPlayer.location = endLocation;
-      // 处理道具变化
-      if (!selectProps && prop) {
-        this.moveService.playerAddProp(currentPlayer, prop);
-      }
-      // 更新roundData
-      const newRoundData = this.moveService.updateRoundData(
-        {
-          ...roundData,
-          prop,
-          selectProps,
-          targetLocation,
-          endLocation,
-        },
-        currentPlayer
+      players[player] = newCurrentPlayer;
+      // 处理回合状态，道具选择
+      const newRoundData = this.playerService.updateRoundData(
+        roundData,
+        prop,
+        newCurrentPlayer
       );
       // 更新game的roundData数据
       await this.gameBaseService.update({
         _id: id,
         updates: {
           roundData: newRoundData,
-          cards,
+          cards: newCards,
           players,
         },
       });
     }
     // 移动但未选择道具
-    else if (status === 0 || status === 1) {
+    else if (status === 0) {
       const { prop } = round;
       if (!prop) {
         throw new BadRequestError("参数无效");
       }
+      const { status } = prop;
+      const newCurrentPlayer = this.playerService.selectProp(
+        status,
+        currentPlayer
+      );
+      players[player] = newCurrentPlayer;
+      // 处理回合状态，道具选择
+      const newRoundData = this.playerService.updateRoundData(
+        roundData,
+        undefined,
+        newCurrentPlayer
+      );
+      // 更新game的roundData数据
+      await this.gameBaseService.update({
+        _id: id,
+        updates: {
+          roundData: newRoundData,
+          players,
+        },
+      });
+    }
+    // 移动但未丢弃道具
+    else if (status === 1) {
+      const { prop } = round;
+      if (!prop) {
+        throw new BadRequestError("参数无效");
+      }
+      const newCurrentPlayer = this.playerService.throwProp(
+        prop,
+        currentPlayer
+      );
+      players[player] = newCurrentPlayer;
+      // 处理回合状态，道具选择
+      const newRoundData = this.playerService.updateRoundData(
+        roundData,
+        undefined,
+        newCurrentPlayer
+      );
+      // 更新game的roundData数据
+      await this.gameBaseService.update({
+        _id: id,
+        updates: {
+          roundData: newRoundData,
+          players,
+        },
+      });
+    }
+    // 结束回合
+    else if (status === 2) {
+      const { end } = round;
+      if (!end) {
+        throw new BadRequestError("参数无效");
+      }
+      const {
+        round: newRoundData,
+        roundHistory: newRoundHistory,
+      } = this.endRound(roundData, roundHistory, players);
+      // 更新game的roundData数据
+      await this.gameBaseService.update({
+        _id: id,
+        updates: {
+          roundData: newRoundData,
+          roundHistory: newRoundHistory,
+        },
+      });
     }
     this.ctx.body = {};
   }
@@ -191,12 +251,41 @@ export class GameService {
     };
   }
 
-  public initRound(currentPlayer: Player): Round {
+  private initRound(currentPlayer: Player, players: Player[]): Round {
     const { index, location } = currentPlayer;
+    const canMoveLocations = this.playerService.canMoveLocations(
+      currentPlayer,
+      players
+    );
+    const canAttackLocations = this.playerService.canAttackLocations(
+      currentPlayer,
+      players
+    );
     return {
       player: index,
       startLocation: location,
       status: -1,
+      canMoveLocations,
+      canAttackLocations,
+    };
+  }
+
+  private endRound(
+    round: Round,
+    roundHistory: Round[],
+    players: Player[]
+  ): {
+    round: Round;
+    roundHistory: Round[];
+  } {
+    const { player } = round;
+    round.end = true;
+    roundHistory.push(round);
+    const nextPlayerIndex = (player + 1) % players.length;
+    const newRoundData = this.initRound(players[nextPlayerIndex], players);
+    return {
+      round: newRoundData,
+      roundHistory,
     };
   }
 }
