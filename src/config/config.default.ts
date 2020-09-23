@@ -13,21 +13,6 @@ export default (appInfo: EggAppInfo) => {
   // add your config here
   config.middleware = [];
 
-  config.welcomeMsg = "Hello midwayjs!";
-
-  config.mongoose = {
-    client: {
-      url: "mongodb://localhost:27017/castle",
-      options: {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-        useFindAndModify: false,
-      },
-    },
-  };
-
-  config.authBaseUrl = "http://localhost:5555/weapp-user/validate_741236987";
-
-  config.autoAuth = process.env.AUTO_AUTH
+  config.autoAuth = process.env.AUTO_AUTH;
   return config;
 };

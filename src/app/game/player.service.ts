@@ -505,4 +505,46 @@ export class PlayerService {
   private isSelectedProp(prop: Prop | undefined): boolean {
     return !!(prop && prop.key.includes("e-2"));
   }
+
+  // 攻击
+  attackPlayerOnLocation(location: number, players: Player[]): Player[] {
+    const player = this.getPlayerByLocation(location, players);
+    if (player) {
+      const { index } = player;
+      // 若有盾
+      const shield = this.hasEquipment(player, "e-2/1");
+      // 则丢弃一个盾
+      if (shield) {
+        players[index] = this.throwProp(selectShieldList[1], player);
+      } else {
+        players[index] = {
+          ...player,
+          dead: true,
+        };
+      }
+    }
+    return players;
+  }
+
+  getPlayerByLocation(location: number, players: Player[]): Player | undefined {
+    let targetPlayer;
+    players.forEach((player) => {
+      const { location: playerLocation } = player;
+      if (playerLocation === location) targetPlayer = player;
+    });
+    return targetPlayer;
+  }
+
+  getNextPlayer(currentPlayerIndex: number, players: Player[]): Player {
+    const L = players.length;
+    let nextPlayerIndex = currentPlayerIndex;
+    do {
+      nextPlayerIndex = (nextPlayerIndex + 1) % L;
+      const nextPlayer = players[nextPlayerIndex];
+      const { dead } = nextPlayer;
+      if (!dead) return nextPlayer;
+    } while (nextPlayerIndex !== currentPlayerIndex);
+
+    return players[currentPlayerIndex];
+  }
 }

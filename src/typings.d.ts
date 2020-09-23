@@ -45,6 +45,7 @@ interface Round {
   canMoveLocations: number[];
   canAttackLocations: number[];
   startLocation: number;
+  attackLocation?: number;
   targetLocation?: number;
   endLocation?: number;
   prop?: Prop;

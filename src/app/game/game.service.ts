@@ -106,7 +106,7 @@ export class GameService {
     if (!start || end) {
       throw new BadRequestError("游戏未开始或已结束");
     }
-    const { status, player, canMoveLocations } = roundData;
+    const { status, player, canMoveLocations, canAttackLocations } = roundData;
     const currentPlayer = players[player];
     const { _id, location } = currentPlayer;
     // 判断是否当前行动玩家
@@ -115,40 +115,67 @@ export class GameService {
     }
     // 未移动
     if (status === -1) {
-      const { targetLocation } = round;
-      if (!targetLocation || !canMoveLocations.includes(targetLocation)) {
+      const { targetLocation, attackLocation } = round;
+      const moveFlag =
+        targetLocation && canMoveLocations.includes(targetLocation);
+      const attackFlag =
+        attackLocation && canAttackLocations.includes(attackLocation);
+      if (!(moveFlag || attackFlag)) {
         throw new BadRequestError("参数无效");
       }
-      // 更新targetLocation
-      roundData.targetLocation = targetLocation;
-      // 翻开卡片
-      const { prop, cards: newCards } = this.playerService.openCard(
-        cards,
-        location
-      );
-      // 移动，并获取道具
-      const newCurrentPlayer = this.playerService.moveAndPickProp(
-        currentPlayer,
-        players,
-        targetLocation,
-        prop
-      );
-      players[player] = newCurrentPlayer;
-      // 处理回合状态，道具选择
-      const newRoundData = this.playerService.updateRoundData(
-        roundData,
-        prop,
-        newCurrentPlayer
-      );
-      // 更新game的roundData数据
-      await this.gameBaseService.update({
-        _id: id,
-        updates: {
-          roundData: newRoundData,
-          cards: newCards,
+      // 玩家选择移动
+      if (targetLocation && moveFlag) {
+        // 更新targetLocation
+        roundData.targetLocation = targetLocation;
+        // 翻开卡片
+        const { prop, cards: newCards } = this.playerService.openCard(
+          cards,
+          location
+        );
+        // 移动，并获取道具
+        const newCurrentPlayer = this.playerService.moveAndPickProp(
+          currentPlayer,
           players,
-        },
-      });
+          targetLocation,
+          prop
+        );
+        players[player] = newCurrentPlayer;
+        // 处理回合状态，道具选择
+        const newRoundData = this.playerService.updateRoundData(
+          roundData,
+          prop,
+          newCurrentPlayer
+        );
+        // 更新game的roundData数据
+        await this.gameBaseService.update({
+          _id: id,
+          updates: {
+            roundData: newRoundData,
+            cards: newCards,
+            players,
+          },
+        });
+      }
+      // 玩家选择攻击
+      else if (attackLocation && attackFlag) {
+        const newPlayers = this.playerService.attackPlayerOnLocation(
+          attackLocation,
+          players
+        );
+        const newRoundData = {
+          ...roundData,
+          status: 2 as RoundStatus,
+          attackLocation,
+        };
+        // 更新game的roundData数据
+        await this.gameBaseService.update({
+          _id: id,
+          updates: {
+            roundData: newRoundData,
+            players: newPlayers,
+          },
+        });
+      }
     }
     // 移动但未选择道具
     else if (status === 0) {
@@ -281,8 +308,8 @@ export class GameService {
     const { player } = round;
     round.end = true;
     roundHistory.push(round);
-    const nextPlayerIndex = (player + 1) % players.length;
-    const newRoundData = this.initRound(players[nextPlayerIndex], players);
+    const nextPlayer = this.playerService.getNextPlayer(player, players);
+    const newRoundData = this.initRound(nextPlayer, players);
     return {
       round: newRoundData,
       roundHistory,

@@ -24,10 +24,10 @@ export class GameModel {
 
   getModel() {
     return getModel({
-      modelName: "game",
+      modelName: "games",
       schemaDefination: this.schemaDefination,
       schemaOption: this.schemaOption,
-      collection: "game",
+      collection: "games",
     });
   }
 }
