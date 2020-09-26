@@ -21,6 +21,7 @@ export class GameController {
     this.ctx.body = await this.gameService.getGame(id);
   }
 
+  // 加入game
   @post("/:id/join", { middleware: ["authMiddleware", "apiMiddleware"] })
   public async joinGame(): Promise<void> {
     const { id } = this.ctx.params;

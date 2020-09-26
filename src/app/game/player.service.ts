@@ -1,5 +1,9 @@
 import { provide, inject } from "midway";
-import { selectShieldList } from "@/lib/gameHelper";
+import {
+  selectShieldList,
+  maidservantRole,
+  knightRole,
+} from "@/lib/gameHelper";
 import { Utils } from "@/lib/utils";
 import { BadRequestError } from "egg-errors";
 
@@ -546,5 +550,73 @@ export class PlayerService {
     } while (nextPlayerIndex !== currentPlayerIndex);
 
     return players[currentPlayerIndex];
+  }
+
+  // 判断游戏是否结束
+  getWinner(players: Player[]): number {
+    // 通过唯一幸存获胜
+    const aliveList = players.filter((e) => !e.dead);
+    const aliveSum = aliveList.length;
+    if (aliveSum === 1) {
+      const { index } = aliveList[0];
+      return index;
+    }
+    // 逃亡者，通过走到对角获胜
+    for (let i = 0; i < aliveSum; i++) {
+      const player = aliveList[i];
+      const { location, target, index } = player;
+      const isKnight = this.isKnight(player);
+      if (!isKnight && location === target) {
+        return index;
+      }
+    }
+    return -1;
+  }
+
+  // 处理players的角色变化
+  handlePlayerRoles(
+    players: Player[],
+    cards: Card[]
+  ): { players: Player[]; cards: Card[] } {
+    const roleList = players.map((player) => {
+      const { dead, roles } = player;
+      const L = roles.length;
+      if (dead) return "dead";
+      else if (L <= 0) return null;
+      const role = roles[L - 1].key;
+      return role;
+    });
+    // 任一人角色为叛军骑士
+    if (roleList.includes("r-1")) {
+      roleList.forEach((role, index) => {
+        // 为无角色的玩家，分配女佣角色
+        if (!role) {
+          players[index].roles.push(maidservantRole);
+        }
+      });
+    }
+    // 无人为叛军骑士，且仅有一人无角色
+    else if (roleList.filter((e) => !e).length === 1) {
+      roleList.forEach((role, index) => {
+        // 为无角色的玩家，分配叛军骑士角色
+        if (!role) {
+          players[index].roles.push(knightRole);
+        }
+      });
+      // 并翻开叛军骑士牌
+      cards.forEach((card, index) => {
+        const {
+          prop: { key },
+        } = card;
+        if (key === "r-1") {
+          cards[index].open = true;
+        }
+      });
+    }
+
+    return {
+      players,
+      cards,
+    };
   }
 }

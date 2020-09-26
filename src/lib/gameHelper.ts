@@ -3,6 +3,22 @@ type PropConfig = {
   count: number;
 };
 
+export const maidservantRole: Prop = {
+  name: "女佣",
+  imgUrl: "https://cdn.renwuming.cn/static/escape/r-4.jpg",
+  imgHdUrl: "https://cdn.renwuming.cn/static/escape/r-4-hd.jpg",
+  key: "r-4",
+  status: -1,
+};
+
+export const knightRole: Prop = {
+  name: "叛军骑士",
+  imgUrl: "https://cdn.renwuming.cn/static/escape/r-1.jpg",
+  imgHdUrl: "https://cdn.renwuming.cn/static/escape/r-1-hd.jpg",
+  key: "r-1",
+  status: -1,
+};
+
 export const propsConfig: PropConfig[] = [
   // 装备
   {
@@ -189,13 +205,11 @@ export const propsConfig: PropConfig[] = [
   },
   // 角色
   {
-    data: {
-      name: "叛军骑士",
-      imgUrl: "https://cdn.renwuming.cn/static/escape/r-1.jpg",
-      imgHdUrl: "https://cdn.renwuming.cn/static/escape/r-1-hd.jpg",
-      key: "r-1",
-      status: -1,
-    },
+    data: knightRole,
+    count: 1,
+  },
+  {
+    data: maidservantRole,
     count: 1,
   },
   {
@@ -214,16 +228,6 @@ export const propsConfig: PropConfig[] = [
       imgUrl: "https://cdn.renwuming.cn/static/escape/r-3.jpg",
       imgHdUrl: "https://cdn.renwuming.cn/static/escape/r-3-hd.jpg",
       key: "r-3",
-      status: -1,
-    },
-    count: 1,
-  },
-  {
-    data: {
-      name: "女佣",
-      imgUrl: "https://cdn.renwuming.cn/static/escape/r-4.jpg",
-      imgHdUrl: "https://cdn.renwuming.cn/static/escape/r-4-hd.jpg",
-      key: "r-4",
       status: -1,
     },
     count: 1,

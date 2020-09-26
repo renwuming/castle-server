@@ -64,6 +64,8 @@ export class GameService {
     const { _id } = player;
     if (players.map((item) => item._id).includes(_id)) {
       return;
+    } else if (players.length >= 4) {
+      throw new BadRequestError("人数已满");
     } else {
       players.push(player);
       await this.gameBaseService.update({
@@ -116,15 +118,17 @@ export class GameService {
     // 未移动
     if (status === -1) {
       const { targetLocation, attackLocation } = round;
+      const validTarget = targetLocation || targetLocation === 0;
+      const validAttack = attackLocation || attackLocation === 0;
       const moveFlag =
-        targetLocation && canMoveLocations.includes(targetLocation);
+        validTarget && canMoveLocations.includes(targetLocation as number);
       const attackFlag =
-        attackLocation && canAttackLocations.includes(attackLocation);
+        validAttack && canAttackLocations.includes(attackLocation as number);
       if (!(moveFlag || attackFlag)) {
         throw new BadRequestError("参数无效");
       }
       // 玩家选择移动
-      if (targetLocation && moveFlag) {
+      if (validTarget && moveFlag) {
         // 更新targetLocation
         roundData.targetLocation = targetLocation;
         // 翻开卡片
@@ -136,7 +140,7 @@ export class GameService {
         const newCurrentPlayer = this.playerService.moveAndPickProp(
           currentPlayer,
           players,
-          targetLocation,
+          targetLocation as number,
           prop
         );
         players[player] = newCurrentPlayer;
@@ -157,9 +161,9 @@ export class GameService {
         });
       }
       // 玩家选择攻击
-      else if (attackLocation && attackFlag) {
+      else if (validAttack && attackFlag) {
         const newPlayers = this.playerService.attackPlayerOnLocation(
-          attackLocation,
+          attackLocation as number,
           players
         );
         const newRoundData = {
@@ -236,17 +240,11 @@ export class GameService {
       if (!end) {
         throw new BadRequestError("参数无效");
       }
-      const {
-        round: newRoundData,
-        roundHistory: newRoundHistory,
-      } = this.endRound(roundData, roundHistory, players);
+      const updates = this.endRound(roundData, roundHistory, players, cards);
       // 更新game的roundData数据
       await this.gameBaseService.update({
         _id: id,
-        updates: {
-          roundData: newRoundData,
-          roundHistory: newRoundHistory,
-        },
+        updates,
       });
     }
     this.ctx.body = {};
@@ -257,7 +255,9 @@ export class GameService {
     const locations = shuffle(startLocations);
     startPlayers.forEach((player, index) => {
       player.index = index;
-      player.location = locations[index];
+      const startLocation = locations[index];
+      player.location = startLocation;
+      player.target = 63 - startLocation;
     });
 
     return startPlayers;
@@ -270,6 +270,7 @@ export class GameService {
       roles: [],
       equipments: [],
       magics: [],
+      target: -1,
       // 以下属性将被user覆盖
       _id: "",
       nickName: "",
@@ -300,19 +301,47 @@ export class GameService {
   private endRound(
     round: Round,
     roundHistory: Round[],
-    players: Player[]
-  ): {
-    round: Round;
-    roundHistory: Round[];
-  } {
+    players: Player[],
+    cards: Card[]
+  ): Partial<Game> {
     const { player } = round;
     round.end = true;
     roundHistory.push(round);
-    const nextPlayer = this.playerService.getNextPlayer(player, players);
-    const newRoundData = this.initRound(nextPlayer, players);
-    return {
-      round: newRoundData,
-      roundHistory,
-    };
+    // 计算winner
+    const winner = this.playerService.getWinner(players);
+    if (winner >= 0) {
+      return {
+        end: true,
+        endedAt: new Date(),
+        winner,
+        roundHistory,
+      };
+    } else {
+      // 处理角色
+      const newPlayersAndCards = this.playerService.handlePlayerRoles(
+        players,
+        cards
+      );
+      const { players: newPlayers } = newPlayersAndCards;
+      // 再次计算winner
+      const winner = this.playerService.getWinner(newPlayers);
+      if (winner >= 0) {
+        return {
+          ...newPlayersAndCards,
+          end: true,
+          endedAt: new Date(),
+          winner,
+          roundHistory,
+        };
+      } else {
+        const nextPlayer = this.playerService.getNextPlayer(player, players);
+        const newRoundData = this.initRound(nextPlayer, players);
+        return {
+          ...newPlayersAndCards,
+          roundData: newRoundData,
+          roundHistory,
+        };
+      }
+    }
   }
 }

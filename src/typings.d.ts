@@ -61,6 +61,7 @@ interface Player {
   roles: Prop[];
   equipments: Prop[];
   magics: Prop[];
+  target: number;
   dead?: boolean;
   // 用户信息
   _id: string;
