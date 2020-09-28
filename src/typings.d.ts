@@ -45,12 +45,16 @@ interface Round {
   canMoveLocations: number[];
   canAttackLocations: number[];
   startLocation: number;
+  magicAction?: MagicAction; // 当前使用的魔法
+  magicActions: MagicAction[]; // 当回合使用过的魔法列表
   attackLocation?: number;
   targetLocation?: number;
   endLocation?: number;
   prop?: Prop;
   selectProps?: Prop[];
   throwProps?: Prop[];
+  selectProp?: Prop;
+  throwProp?: Prop;
   end?: boolean; // 回合是否结束
 }
 
@@ -62,6 +66,7 @@ interface Player {
   equipments: Prop[];
   magics: Prop[];
   target: number;
+  status: number[]; // 玩家状态：1 被冰冻
   dead?: boolean;
   // 用户信息
   _id: string;
@@ -81,6 +86,12 @@ interface Card {
   id: number;
   prop: Prop;
   open: boolean;
+}
+
+interface MagicAction {
+  magic: Prop;
+  target: number;
+  targetEquipment: Prop;
 }
 
 /**

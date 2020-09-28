@@ -317,6 +317,11 @@ export class PlayerService {
       .includes(key);
   }
 
+  public hasMagic(player: Player, key: string): boolean {
+    const { magics } = player;
+    return magics.map((prop) => prop.key).includes(key);
+  }
+
   // 计算按某方向移动一步后的位置 - 撞墙/人检测
   private canMoveStepsToDirection(
     startLocation: number,
@@ -431,19 +436,19 @@ export class PlayerService {
     return this.pickProp(player, prop, true);
   }
 
-  public throwProp(prop: Prop, player: Player): Player {
-    const { equipments } = player;
+  public throwProp(prop: Prop, player: Player, type: string): Player {
+    const props = player[type] as Prop[];
     const { key, status } = prop;
-    const throwIndex = equipments
+    const throwIndex = props
       .map((prop) => `${prop.key}/${prop.status}`)
       .indexOf(`${key}/${status}`);
     if (throwIndex < 0) {
       throw new BadRequestError("参数无效");
     }
-    equipments.splice(throwIndex, 1);
+    props.splice(throwIndex, 1);
     return {
       ...player,
-      equipments,
+      [type]: props,
     };
   }
 
@@ -519,7 +524,11 @@ export class PlayerService {
       const shield = this.hasEquipment(player, "e-2/1");
       // 则丢弃一个盾
       if (shield) {
-        players[index] = this.throwProp(selectShieldList[1], player);
+        players[index] = this.throwProp(
+          selectShieldList[1],
+          player,
+          "equipments"
+        );
       } else {
         players[index] = {
           ...player,
@@ -539,17 +548,50 @@ export class PlayerService {
     return targetPlayer;
   }
 
-  getNextPlayer(currentPlayerIndex: number, players: Player[]): Player {
+  getNextPlayer(
+    currentPlayerIndex: number,
+    players: Player[]
+  ): {
+    nextPlayer: Player;
+    newPlayers: Player[];
+  } {
     const L = players.length;
     let nextPlayerIndex = currentPlayerIndex;
     do {
       nextPlayerIndex = (nextPlayerIndex + 1) % L;
       const nextPlayer = players[nextPlayerIndex];
       const { dead } = nextPlayer;
-      if (!dead) return nextPlayer;
+      // 【冰冻】状态
+      if (this.isFreezed(nextPlayer)) {
+        players[nextPlayerIndex] = this.thaw(nextPlayer);
+      }
+      // 非【死亡】状态
+      else if (!dead) {
+        return {
+          nextPlayer,
+          newPlayers: players,
+        };
+      }
     } while (nextPlayerIndex !== currentPlayerIndex);
 
-    return players[currentPlayerIndex];
+    return {
+      nextPlayer: players[currentPlayerIndex],
+      newPlayers: players,
+    };
+  }
+
+  private isFreezed(player: Player) {
+    const { status } = player;
+    return status.includes(0);
+  }
+
+  private thaw(player: Player): Player {
+    const { status } = player;
+    const newStatus = status.filter((e) => e !== 0);
+    return {
+      ...player,
+      status: newStatus,
+    };
   }
 
   // 判断游戏是否结束
@@ -617,6 +659,50 @@ export class PlayerService {
     return {
       players,
       cards,
+    };
+  }
+
+  public handleMagicAction(
+    currentPlayer: Player,
+    players: Player[],
+    currentPlayerIndex: number,
+    magicAction: MagicAction,
+    roundData: Round
+  ): {
+    players: Player[];
+    roundData: Round;
+  } {
+    const { target, magic, targetEquipment } = magicAction;
+    const { key } = magic;
+    const targetPlayer = players[target];
+    // 必须以存活的人为目标
+    if (!targetPlayer || targetPlayer.dead) {
+      throw new BadRequestError("参数无效");
+    }
+    // 加入当前回合使用的魔法列表
+    roundData.magicActions.push(magicAction);
+    // 当前玩家，消耗魔法
+    players[currentPlayerIndex] = this.throwProp(
+      magic,
+      currentPlayer,
+      "magics"
+    );
+    // 【缴械】
+    if (key === "m-1") {
+      players[target] = this.throwProp(
+        targetEquipment,
+        players[target],
+        "equipments"
+      );
+    }
+    // 【冰弹】
+    else if (key === "m-2") {
+      players[target].status.push(0);
+    }
+
+    return {
+      players,
+      roundData,
     };
   }
 }

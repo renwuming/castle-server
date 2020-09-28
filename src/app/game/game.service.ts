@@ -95,7 +95,10 @@ export class GameService {
     }
   }
 
-  public async updateGame(id: string, round: Round) {
+  public async updateGame(
+    id: string,
+    round: Round
+  ): Promise<Round | undefined> {
     const {
       roundData,
       players,
@@ -115,8 +118,33 @@ export class GameService {
     if (_id !== this.ctx.state.user._id) {
       throw new UnprocessableEntityError("It's not your turn");
     }
+
+    const { magicAction } = round;
+    // 使用魔法
+    if (magicAction) {
+      const {
+        magic: { key },
+      } = magicAction;
+      const hasMagic = this.playerService.hasMagic(currentPlayer, key);
+      if (!hasMagic) {
+        throw new BadRequestError("参数无效");
+      }
+      const updates: Partial<Game> = this.playerService.handleMagicAction(
+        currentPlayer,
+        players,
+        player,
+        magicAction,
+        roundData
+      );
+      // 更新game的数据
+      await this.gameBaseService.update({
+        _id: id,
+        updates,
+      });
+      return updates.roundData;
+    }
     // 未移动
-    if (status === -1) {
+    else if (status === -1) {
       const { targetLocation, attackLocation } = round;
       const validTarget = targetLocation || targetLocation === 0;
       const validAttack = attackLocation || attackLocation === 0;
@@ -127,6 +155,7 @@ export class GameService {
       if (!(moveFlag || attackFlag)) {
         throw new BadRequestError("参数无效");
       }
+      let newRoundData;
       // 玩家选择移动
       if (validTarget && moveFlag) {
         // 更新targetLocation
@@ -145,7 +174,7 @@ export class GameService {
         );
         players[player] = newCurrentPlayer;
         // 处理回合状态，道具选择
-        const newRoundData = this.playerService.updateRoundData(
+        newRoundData = this.playerService.updateRoundData(
           roundData,
           prop,
           newCurrentPlayer
@@ -166,7 +195,7 @@ export class GameService {
           attackLocation as number,
           players
         );
-        const newRoundData = {
+        newRoundData = {
           ...roundData,
           status: 2 as RoundStatus,
           attackLocation,
@@ -180,6 +209,7 @@ export class GameService {
           },
         });
       }
+      return newRoundData;
     }
     // 移动但未选择道具
     else if (status === 0) {
@@ -199,6 +229,7 @@ export class GameService {
         undefined,
         newCurrentPlayer
       );
+      newRoundData.selectProp = prop;
       // 更新game的roundData数据
       await this.gameBaseService.update({
         _id: id,
@@ -207,6 +238,7 @@ export class GameService {
           players,
         },
       });
+      return newRoundData;
     }
     // 移动但未丢弃道具
     else if (status === 1) {
@@ -216,7 +248,8 @@ export class GameService {
       }
       const newCurrentPlayer = this.playerService.throwProp(
         prop,
-        currentPlayer
+        currentPlayer,
+        "equipments"
       );
       players[player] = newCurrentPlayer;
       // 处理回合状态，道具选择
@@ -225,6 +258,7 @@ export class GameService {
         undefined,
         newCurrentPlayer
       );
+      newRoundData.throwProp = prop;
       // 更新game的roundData数据
       await this.gameBaseService.update({
         _id: id,
@@ -233,6 +267,7 @@ export class GameService {
           players,
         },
       });
+      return newRoundData;
     }
     // 结束回合
     else if (status === 2) {
@@ -241,13 +276,13 @@ export class GameService {
         throw new BadRequestError("参数无效");
       }
       const updates = this.endRound(roundData, roundHistory, players, cards);
-      // 更新game的roundData数据
+      // 更新game的数据
       await this.gameBaseService.update({
         _id: id,
         updates,
       });
+      return updates.roundData;
     }
-    this.ctx.body = {};
   }
 
   private initPlayers(players: Player[]): Player[] {
@@ -271,6 +306,7 @@ export class GameService {
       equipments: [],
       magics: [],
       target: -1,
+      status: [],
       // 以下属性将被user覆盖
       _id: "",
       nickName: "",
@@ -295,6 +331,7 @@ export class GameService {
       status: -1,
       canMoveLocations,
       canAttackLocations,
+      magicActions: [],
     };
   }
 
@@ -334,10 +371,14 @@ export class GameService {
           roundHistory,
         };
       } else {
-        const nextPlayer = this.playerService.getNextPlayer(player, players);
-        const newRoundData = this.initRound(nextPlayer, players);
+        const {
+          nextPlayer,
+          newPlayers: finalPlayers,
+        } = this.playerService.getNextPlayer(player, newPlayers);
+        const newRoundData = this.initRound(nextPlayer, finalPlayers);
         return {
           ...newPlayersAndCards,
+          players: finalPlayers,
           roundData: newRoundData,
           roundHistory,
         };
