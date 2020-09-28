@@ -57,7 +57,8 @@
     "start_build": "npm run build && cross-env NODE_ENV=production npm run start",
     "stop": "egg-scripts stop --title=egg-server-castle-server",
     "test": "npm run lint && npm run devtest",
-    "autod": "midway-bin autod"
+    "autod": "midway-bin autod",
+    "restart": "npm run build && npm run stop && npm run start"
   },
   "ci": {
     "version": "10, 12"
