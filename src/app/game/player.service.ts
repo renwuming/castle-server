@@ -204,7 +204,7 @@ export class PlayerService {
           currentPlayer,
           location + steps
         );
-        if (!attackDirections["东"] && (showAllAttackLocations || canAttack)) {
+        if (showAllAttackLocations || (!attackDirections["东"] && canAttack)) {
           canAttackLocations.push(location + steps);
           attackDirections["东"] = true;
         }
@@ -215,7 +215,7 @@ export class PlayerService {
           currentPlayer,
           location - steps
         );
-        if (!attackDirections["西"] && (showAllAttackLocations || canAttack)) {
+        if (showAllAttackLocations || (!attackDirections["西"] && canAttack)) {
           canAttackLocations.push(location - steps);
           attackDirections["西"] = true;
         }
@@ -226,7 +226,7 @@ export class PlayerService {
           currentPlayer,
           location - steps * 8
         );
-        if (!attackDirections["北"] && (showAllAttackLocations || canAttack)) {
+        if (showAllAttackLocations || (!attackDirections["北"] && canAttack)) {
           canAttackLocations.push(location - steps * 8);
           attackDirections["北"] = true;
         }
@@ -237,7 +237,7 @@ export class PlayerService {
           currentPlayer,
           location + steps * 8
         );
-        if (!attackDirections["南"] && (showAllAttackLocations || canAttack)) {
+        if (showAllAttackLocations || (!attackDirections["南"] && canAttack)) {
           canAttackLocations.push(location + steps * 8);
           attackDirections["南"] = true;
         }
