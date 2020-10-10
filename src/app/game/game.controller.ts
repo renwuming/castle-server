@@ -10,6 +10,12 @@ export class GameController {
   private gameService: GameService;
   constructor() {}
 
+  @get("/", { middleware: ["authMiddleware", "apiMiddleware"] })
+  public async getGames(): Promise<void> {
+    const { skip, end } = this.ctx.query;
+    this.ctx.body = await this.gameService.getGames(+skip, Boolean(end));
+  }
+
   @post("/", { middleware: ["authMiddleware", "apiMiddleware"] })
   public async createGame(): Promise<void> {
     this.ctx.body = await this.gameService.createGame();
@@ -29,6 +35,14 @@ export class GameController {
     this.ctx.body = {};
   }
 
+  // 离开game
+  @post("/:id/leave", { middleware: ["authMiddleware", "apiMiddleware"] })
+  public async leaveGame(): Promise<void> {
+    const { id } = this.ctx.params;
+    await this.gameService.leaveGame(id);
+    this.ctx.body = {};
+  }
+
   @post("/:id/start", { middleware: ["authMiddleware", "apiMiddleware"] })
   public async startGame(): Promise<void> {
     const { id } = this.ctx.params;
@@ -42,5 +56,22 @@ export class GameController {
     const { id } = this.ctx.params;
     const round: Round = this.ctx.request.body;
     this.ctx.body = await this.gameService.updateGame(id, round);
+  }
+
+  // 历史成就
+  @get("/history/achievements", {
+    middleware: ["authMiddleware", "apiMiddleware"],
+  })
+  public async getAchievements(): Promise<void> {
+    const { _id } = this.ctx.state.user;
+    this.ctx.body = await this.gameService.getAchievements(_id);
+  }
+  // 获取某玩家的历史成就
+  @get("/history/achievements/:id", {
+    middleware: ["authMiddleware", "apiMiddleware"],
+  })
+  public async getAchievementsByID(): Promise<void> {
+    const { id } = this.ctx.params;
+    this.ctx.body = await this.gameService.getAchievements(id);
   }
 }

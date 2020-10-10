@@ -9,24 +9,47 @@ export default class BaseService<T = any> {
 
   // Get by id
   getById = async (id: ID): Promise<T> => {
-    const obj = await this.model.findById(id);
+    const obj = (await this.model.findById(id).lean()) as T;
     return obj;
   };
 
   // Get by uuid
-  getByUuid = async (uuid: UUID): Promise<T | null> => {
+  getByUuid = async (uuid: UUID): Promise<T> => {
     const obj = await this.model.findOne({ uuid });
     return obj;
   };
 
   // Get all
   getAll = async (): Promise<T[]> => {
-    const docs = await this.model.find({});
+    const docs = await this.model.find({}).lean();
     return docs;
   };
 
-  find = async (query: Partial<T>): Promise<T[]> => {
-    const result = await this.model.find(query);
+  find = async (query: Partial<T>, resQuery: any): Promise<T[]> => {
+    const result = await this.model.find(query, resQuery).lean();
+    return result;
+  };
+
+  query = async (query: any, resQuery: any): Promise<T[]> => {
+    const result = await this.model.find(query, resQuery).lean();
+    return result;
+  };
+
+  elemMatch = async (
+    path: string,
+    elemQuery: any,
+    skip: number = 0,
+    limit: number = 0,
+    query: Partial<T> = {},
+    resQuery: any = {}
+  ): Promise<T[]> => {
+    const result = await this.model
+      .find(query, resQuery)
+      .where(path)
+      .elemMatch(elemQuery)
+      .skip(skip)
+      .limit(limit)
+      .lean();
     return result;
   };
 

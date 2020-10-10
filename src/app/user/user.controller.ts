@@ -1,27 +1,18 @@
-import { Context, controller, get, inject, provide } from "midway";
+import { Context, controller, inject, post, provide } from "midway";
 
-import { UserService } from "./user.service";
+// import { UserService } from "./user.service";
 
 @provide()
-@controller("/user")
+@controller("/users")
 export class UserController {
   @inject()
   ctx: Context;
-  @inject()
-  private userService: UserService;
+  // @inject()
+  // private userService: UserService;
   constructor() {}
 
-  @get("/:id")
-  public async getUser(): Promise<void> {
-    const id = +this.ctx.params.id;
-    const user = await this.userService.getUser({ id });
-
-    await this.userService.validate();
-
-    this.ctx.body = {
-      success: true,
-      message: "OK",
-      data: user,
-    };
+  @post("/validate", { middleware: ["authMiddleware", "apiMiddleware"] })
+  public async getGames(): Promise<void> {
+    this.ctx.body = this.ctx.state.user;
   }
 }

@@ -1,8 +1,6 @@
 import { provide, Context, config, inject } from "midway";
 import { UnauthorizedError } from "egg-errors";
 
-import { GetUserOpts, UserInfo } from "./user.model";
-
 @provide()
 export class UserService {
   @inject()
@@ -15,26 +13,22 @@ export class UserService {
     const userData = await ctx
       .curl(this.authBaseUrl, {
         type: "POST",
+        dataType: "json",
         data: { ticket },
       })
       .then((res) => {
-        const { status } = res;
+        const { status, data } = res;
         if (status >= 400) {
           throw new UnauthorizedError("身份验证失败");
         }
+        return data;
       });
-    ctx.state.user = userData;
-  }
-
-  /**
-   * 读取用户信息
-   */
-  public async getUser(options: GetUserOpts): Promise<UserInfo> {
-    return {
-      id: options.id,
-      user_name: "mockedName",
-      phone: "12345678901",
-      email: "xxx.xxx@xxx.com",
+    const { _id, userInfo } = userData;
+    const { nickName, avatarUrl } = userInfo;
+    ctx.state.user = {
+      _id,
+      nickName,
+      avatarUrl,
     };
   }
 }

@@ -7,6 +7,7 @@ export class ApiMiddleware implements WebMiddleware {
       ctx.api = {
         reqTimeStr: new Date().toLocaleString(),
       };
+      ctx.set("content-type", "application/json");
       await next();
     };
   }

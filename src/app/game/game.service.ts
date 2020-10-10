@@ -19,6 +19,57 @@ export class GameService {
   playerService: PlayerService;
 
   /**
+   * 获取游戏列表
+   */
+  public async getGames(
+    skip: number = 0,
+    end: boolean
+  ): Promise<
+    (Game & {
+      win?: boolean;
+    })[]
+  > {
+    const { _id: userID } = this.ctx.state.user;
+    const games = await this.gameBaseService.elemMatch(
+      "players",
+      {
+        _id: userID,
+      },
+      skip,
+      10,
+      { end },
+      {
+        players: 1,
+        winner: 1,
+        start: 1,
+        startedAt: 1,
+        endedAt: 1,
+        createdAt: 1,
+      }
+    );
+    if (end) {
+      return games
+        .sort((a, b) => {
+          return +b.endedAt - +a.endedAt;
+        })
+        .map((game) => {
+          const { players, winner } = game;
+          const win =
+            players.map((item) => item._id).indexOf(userID) === winner;
+
+          return {
+            ...game,
+            win,
+          };
+        });
+    } else {
+      return games.sort((a, b) => {
+        return Number(b.createdAt) - Number(a.createdAt);
+      });
+    }
+  }
+
+  /**
    * 创建游戏
    */
   public async createGame(): Promise<Partial<Game>> {
@@ -54,8 +105,32 @@ export class GameService {
     };
   }
 
-  public async getGame(id: string): Promise<Partial<Game>> {
-    return await this.gameBaseService.getById(id);
+  public async getGame(
+    id: string
+  ): Promise<
+    Game & {
+      ownGame: boolean;
+      inGame: boolean;
+      ownTurn: boolean;
+    }
+  > {
+    const game = await this.gameBaseService.getById(id);
+    const { ownPlayer, players, roundData, end } = game;
+    const { _id } = this.ctx.state.user;
+    const ownGame = this.utils.isEqualStr(_id, ownPlayer);
+    const inGame = players.map((item) => item._id).includes(_id);
+    let ownTurn = false;
+    if (inGame && roundData && !end) {
+      const { player } = roundData;
+      ownTurn = players.map((item) => item._id).indexOf(_id) === player;
+    }
+
+    return {
+      ...game,
+      ownGame,
+      inGame,
+      ownTurn,
+    };
   }
 
   public async joinGame(id: string) {
@@ -77,9 +152,27 @@ export class GameService {
     }
   }
 
+  public async leaveGame(id: string) {
+    const { _id } = this.ctx.state.user;
+    const { players } = await this.gameBaseService.getById(id);
+    if (players.map((item) => item._id).includes(_id)) {
+      const newPlayers = players.filter((item) => item._id !== _id);
+      await this.gameBaseService.update({
+        _id: id,
+        updates: {
+          players: newPlayers,
+        },
+      });
+    }
+  }
+
   public async startGame(id: string) {
     const { ownPlayer, players } = await this.gameBaseService.getById(id);
     const { _id } = this.ctx.state.user;
+    // 人数小于等于1
+    if (players.length <= 1) {
+      throw new BadRequestError("人数不足");
+    }
     // 若是房主
     if (this.utils.isEqualStr(ownPlayer, _id)) {
       const startPlayers = this.initPlayers(players.slice(0, 4));
@@ -92,6 +185,8 @@ export class GameService {
           roundData: this.initRound(startPlayers[0], startPlayers),
         },
       });
+    } else {
+      throw new UnprocessableEntityError("不是房主");
     }
   }
 
@@ -384,5 +479,71 @@ export class GameService {
         };
       }
     }
+  }
+
+  public async getAchievements(userID: string) {
+    const historyGames = await this.gameBaseService.elemMatch(
+      "players",
+      {
+        _id: userID,
+      },
+      0,
+      undefined,
+      { end: true },
+      {
+        players: 1,
+        winner: 1,
+      }
+    );
+
+    const Sum = historyGames.length;
+    let WinSum = 0;
+    let WinValue = 0;
+    let KnightSum = 0;
+    let KingSum = 0;
+    let QueenSum = 0;
+    let ServantSum = 0;
+    let NoRoleSum = 0;
+
+    historyGames.forEach((game) => {
+      const { winner, players } = game;
+      const index = players.map((item) => item._id).indexOf(userID);
+      const player = players[index];
+      if (!player) return;
+      if (index === winner) {
+        WinSum++;
+        WinValue += players.length / 2;
+        // 玩家获胜时的角色
+        const { roles } = player;
+        let role: string;
+        if (roles.length <= 0) {
+          role = "r-0";
+        } else {
+          role = roles.slice(-1)[0].key;
+        }
+        if (role === "r-0") {
+          NoRoleSum++;
+        } else if (role === "r-1") {
+          KnightSum++;
+        } else if (role === "r-2") {
+          KingSum++;
+        } else if (role === "r-3") {
+          QueenSum++;
+        } else if (role === "r-4") {
+          ServantSum++;
+        }
+      }
+    });
+    const WinRate = Sum > 0 ? ((WinValue / Sum) * 100).toFixed(2) : "0.00";
+    return {
+      WinRate,
+      Sum,
+      WinSum,
+      KnightSum,
+      KingSum,
+      QueenSum,
+      ServantSum,
+      NoRoleSum,
+    };
   }
 }
