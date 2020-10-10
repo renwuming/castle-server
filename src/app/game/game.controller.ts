@@ -56,7 +56,8 @@ export class GameController {
   public async updateGame(): Promise<void> {
     const { id } = this.ctx.params;
     const round: Round = this.ctx.request.body;
-    this.ctx.body = await this.gameService.updateGame(id, round);
+    await this.gameService.updateGame(id, round);
+    this.ctx.body = await this.gameService.handleAutoEndRound(id);
   }
 
   // 历史成就

@@ -487,6 +487,32 @@ export class GameService {
     }
   }
 
+  public async handleAutoEndRound(id: string): Promise<Round | undefined> {
+    const {
+      roundData,
+      players,
+      roundHistory,
+      cards,
+    } = await this.gameBaseService.getById(id);
+    const { player, status } = roundData;
+    // 如果已结束移动
+    if (status === 2) {
+      const currentPlayer = players[player];
+      const { magics } = currentPlayer;
+      // 若无魔法，则直接结束回合
+      if (magics.length <= 0) {
+        const updates = this.endRound(roundData, roundHistory, players, cards);
+        // 更新game的数据
+        await this.gameBaseService.update({
+          _id: id,
+          updates,
+        });
+        return updates.roundData;
+      }
+    }
+    return roundData;
+  }
+
   public async getAchievements(userID: string) {
     const historyGames = await this.gameBaseService.elemMatch(
       "players",
