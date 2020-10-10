@@ -125,8 +125,14 @@ export class GameService {
       ownTurn = players.map((item) => item._id).indexOf(_id) === player;
     }
 
+    // 处理players的移动、攻击范围
+    const playersWithMoveAttackRange = this.playerService.getPlayersWithMoveAttackRange(
+      players
+    );
+
     return {
       ...game,
+      players: playersWithMoveAttackRange,
       ownGame,
       inGame,
       ownTurn,

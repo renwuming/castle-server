@@ -297,6 +297,18 @@ export class PlayerService {
     return canAttackLocations;
   }
 
+  public getPlayersWithMoveAttackRange(players: Player[]): Player[] {
+    return players.map((player) => {
+      const canMoveLocations = this.canMoveLocations(player, players);
+      const canAttackLocations = this.canAttackLocations(player, players, true);
+      return {
+        ...player,
+        canMoveLocations,
+        canAttackLocations,
+      };
+    });
+  }
+
   // 判断是否为【叛军骑士】
   private isKnight(player: Player): boolean {
     const { roles } = player;

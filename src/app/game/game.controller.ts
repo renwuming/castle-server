@@ -21,6 +21,7 @@ export class GameController {
     this.ctx.body = await this.gameService.createGame();
   }
 
+  // 获取game数据
   @get("/:id", { middleware: ["authMiddleware", "apiMiddleware"] })
   public async getGame(): Promise<void> {
     const { id } = this.ctx.params;

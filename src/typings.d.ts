@@ -66,7 +66,9 @@ interface Player {
   equipments: Prop[];
   magics: Prop[];
   target: number;
-  status: number[]; // 玩家状态：1 被冰冻
+  status: number[]; // 玩家状态：0 被冰冻
+  canMoveLocations?: number[];
+  canAttackLocations?: number[];
   dead?: boolean;
   // 用户信息
   _id: string;
