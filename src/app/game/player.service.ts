@@ -618,9 +618,9 @@ export class PlayerService {
     // 逃亡者，通过走到对角获胜
     for (let i = 0; i < aliveSum; i++) {
       const player = aliveList[i];
-      const { location, target, index } = player;
+      const { location, target, index, roles } = player;
       const isKnight = this.isKnight(player);
-      if (!isKnight && location === target) {
+      if (!isKnight && roles.length > 0 && location === target) {
         return index;
       }
     }
