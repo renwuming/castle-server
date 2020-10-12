@@ -30,6 +30,7 @@ export class GameService {
     })[]
   > {
     const { _id: userID } = this.ctx.state.user;
+    const sortQuery = end ? { endedAt: -1 } : { createdAt: -1 };
     const games = await this.gameBaseService.elemMatch(
       "players",
       {
@@ -38,6 +39,7 @@ export class GameService {
       skip,
       10,
       { end },
+      sortQuery,
       {
         players: 1,
         winner: 1,
@@ -48,24 +50,17 @@ export class GameService {
       }
     );
     if (end) {
-      return games
-        .sort((a, b) => {
-          return +b.endedAt - +a.endedAt;
-        })
-        .map((game) => {
-          const { players, winner } = game;
-          const win =
-            players.map((item) => item._id).indexOf(userID) === winner;
+      return games.map((game) => {
+        const { players, winner } = game;
+        const win = players.map((item) => item._id).indexOf(userID) === winner;
 
-          return {
-            ...game,
-            win,
-          };
-        });
-    } else {
-      return games.sort((a, b) => {
-        return Number(b.createdAt) - Number(a.createdAt);
+        return {
+          ...game,
+          win,
+        };
       });
+    } else {
+      return games;
     }
   }
 

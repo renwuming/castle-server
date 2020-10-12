@@ -41,6 +41,7 @@ export default class BaseService<T = any> {
     skip: number = 0,
     limit: number = 0,
     query: Partial<T> = {},
+    sort: any = {},
     resQuery: any = {}
   ): Promise<T[]> => {
     const result = await this.model
@@ -49,6 +50,7 @@ export default class BaseService<T = any> {
       .elemMatch(elemQuery)
       .skip(skip)
       .limit(limit)
+      .sort(sort)
       .lean();
     return result;
   };
