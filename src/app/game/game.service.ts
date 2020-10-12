@@ -107,6 +107,7 @@ export class GameService {
       ownGame: boolean;
       inGame: boolean;
       ownTurn: boolean;
+      playerIndex: number;
     }
   > {
     const game = await this.gameBaseService.getById(id);
@@ -115,9 +116,10 @@ export class GameService {
     const ownGame = this.utils.isEqualStr(_id, ownPlayer);
     const inGame = players.map((item) => item._id).includes(_id);
     let ownTurn = false;
+    const playerIndex = players.map((item) => item._id).indexOf(_id);
     if (inGame && roundData && !end) {
       const { player } = roundData;
-      ownTurn = players.map((item) => item._id).indexOf(_id) === player;
+      ownTurn = playerIndex === player;
     }
 
     // 处理players的移动、攻击范围
@@ -131,6 +133,7 @@ export class GameService {
       ownGame,
       inGame,
       ownTurn,
+      playerIndex,
     };
   }
 
