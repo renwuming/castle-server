@@ -56,6 +56,10 @@ interface Round {
   selectProp?: Prop;
   throwProp?: Prop;
   end?: boolean; // 回合是否结束
+  startedAt: number; // 回合开始的时间戳
+  autoEndAt: number; // 回合将自动结束的时间戳
+  // 为前端提供数据时，特有的属性
+  countdown?: number; // 回合自动结束倒计时，单位秒
 }
 
 interface Player {

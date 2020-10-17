@@ -310,9 +310,14 @@ export class PlayerService {
   }
 
   // 判断是否为【叛军骑士】
-  private isKnight(player: Player): boolean {
+  public isKnight(player: Player): boolean {
     const { roles } = player;
     return roles.map((prop) => prop.key).includes("r-1");
+  }
+  // 判断是否为【逃亡者】
+  public isEscaper(player: Player): boolean {
+    const { roles } = player;
+    return !this.isKnight(player) && roles.length > 0;
   }
 
   private hasEquipment(player: Player, key: string): boolean {
@@ -618,9 +623,9 @@ export class PlayerService {
     // 逃亡者，通过走到对角获胜
     for (let i = 0; i < aliveSum; i++) {
       const player = aliveList[i];
-      const { location, target, index, roles } = player;
-      const isKnight = this.isKnight(player);
-      if (!isKnight && roles.length > 0 && location === target) {
+      const { location, target, index } = player;
+      const isEscaper = this.isEscaper(player);
+      if (isEscaper && location === target) {
         return index;
       }
     }

@@ -1,4 +1,4 @@
-import { provide, inject, Context } from "midway";
+import { provide, inject, Context, config } from "midway";
 import { v4 } from "uuid";
 import { propsConfig, startLocations } from "@/lib/gameHelper";
 import { shuffle } from "lodash";
@@ -17,6 +17,8 @@ export class GameService {
   gameBaseService: GameBaseService;
   @inject()
   playerService: PlayerService;
+  @config()
+  ROUND_TIME_LIMIT: number;
 
   /**
    * 获取游戏列表
@@ -127,6 +129,14 @@ export class GameService {
       players
     );
 
+    // 处理倒计时
+    if (roundData) {
+      const timeStamp = Date.now();
+      const { autoEndAt } = roundData;
+      const countdown = ~~((autoEndAt - timeStamp) / 1000);
+      roundData.countdown = countdown > 0 ? countdown : 0;
+    }
+
     return {
       ...game,
       players: playersWithMoveAttackRange,
@@ -194,10 +204,7 @@ export class GameService {
     }
   }
 
-  public async updateGame(
-    id: string,
-    round: Round
-  ): Promise<Round | undefined> {
+  public async updateGame(id: string, round: Partial<Round>): Promise<Round> {
     const {
       roundData,
       players,
@@ -214,7 +221,7 @@ export class GameService {
     const currentPlayer = players[player];
     const { _id, location } = currentPlayer;
     // 判断是否当前行动玩家
-    if (_id !== this.ctx.state.user._id) {
+    if (!this.ctx.state.AutoAciton && _id !== this.ctx.state.user._id) {
       throw new UnprocessableEntityError("It's not your turn");
     }
 
@@ -228,7 +235,7 @@ export class GameService {
       if (!hasMagic) {
         throw new BadRequestError("参数无效");
       }
-      const updates: Partial<Game> = this.playerService.handleMagicAction(
+      const updates = this.playerService.handleMagicAction(
         currentPlayer,
         players,
         player,
@@ -254,7 +261,7 @@ export class GameService {
       if (!(moveFlag || attackFlag)) {
         throw new BadRequestError("参数无效");
       }
-      let newRoundData;
+      let newRoundData: Round = roundData;
       // 玩家选择移动
       if (validTarget && moveFlag) {
         // 更新targetLocation
@@ -382,6 +389,8 @@ export class GameService {
       });
       return updates.roundData;
     }
+
+    return roundData;
   }
 
   private initPlayers(players: Player[]): Player[] {
@@ -424,6 +433,8 @@ export class GameService {
       currentPlayer,
       players
     );
+
+    const timeStamp = Date.now();
     return {
       player: index,
       startLocation: location,
@@ -431,6 +442,8 @@ export class GameService {
       canMoveLocations,
       canAttackLocations,
       magicActions: [],
+      startedAt: timeStamp,
+      autoEndAt: timeStamp + this.ROUND_TIME_LIMIT,
     };
   }
 
@@ -439,7 +452,9 @@ export class GameService {
     roundHistory: Round[],
     players: Player[],
     cards: Card[]
-  ): Partial<Game> {
+  ): Partial<Game> & {
+    roundData: Round;
+  } {
     const { player } = round;
     round.end = true;
     roundHistory.push(round);
@@ -450,6 +465,7 @@ export class GameService {
         end: true,
         endedAt: new Date(),
         winner,
+        roundData: round,
         roundHistory,
       };
     } else {
@@ -467,6 +483,7 @@ export class GameService {
           end: true,
           endedAt: new Date(),
           winner,
+          roundData: round,
           roundHistory,
         };
       } else {
@@ -485,7 +502,7 @@ export class GameService {
     }
   }
 
-  public async handleAutoEndRound(id: string): Promise<Round | undefined> {
+  public async handleAutoEndRound(id: string): Promise<Round> {
     const {
       roundData,
       players,

@@ -14,5 +14,9 @@ export default (appInfo: EggAppInfo) => {
   config.middleware = [];
 
   config.autoAuth = process.env.AUTO_AUTH;
+
+  // 每回合限时
+  config.ROUND_TIME_LIMIT = 30 * 1000;
+
   return config;
 };

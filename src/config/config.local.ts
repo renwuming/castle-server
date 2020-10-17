@@ -8,6 +8,7 @@ export const development = {
     "lib",
     "middleware",
     "service",
+    "schedule",
   ],
   overrideDefault: true,
   autoAuth: true,

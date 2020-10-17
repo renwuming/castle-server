@@ -25,12 +25,12 @@ export default class BaseService<T = any> {
     return docs;
   };
 
-  find = async (query: Partial<T>, resQuery: any): Promise<T[]> => {
+  find = async (query: Partial<T>, resQuery: any = {}): Promise<T[]> => {
     const result = await this.model.find(query, resQuery).lean();
     return result;
   };
 
-  query = async (query: any, resQuery: any): Promise<T[]> => {
+  query = async (query: any, resQuery: any = {}): Promise<T[]> => {
     const result = await this.model.find(query, resQuery).lean();
     return result;
   };
