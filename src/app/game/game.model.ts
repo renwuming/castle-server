@@ -16,6 +16,7 @@ export class GameModel {
     players: Array,
     roundData: Object,
     roundHistory: Array,
+    onlineTimeStampMap: Object,
   };
 
   private schemaOption = {

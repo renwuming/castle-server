@@ -23,6 +23,7 @@ interface Game {
   roundHistory: Round[];
   createdAt?: Date;
   updatedAt?: Date;
+  onlineTimeStampMap: any;
   // 开始后需要更新的属性
   start: boolean;
   startedAt: Date;
@@ -78,6 +79,8 @@ interface Player {
   _id: string;
   nickName: string;
   avatarUrl: string;
+  // 为前端提供数据时，特有的属性
+  online?: boolean; // 是否在线
 }
 
 interface Prop {

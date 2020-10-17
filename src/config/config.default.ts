@@ -16,7 +16,9 @@ export default (appInfo: EggAppInfo) => {
   config.autoAuth = process.env.AUTO_AUTH;
 
   // 每回合限时
-  config.ROUND_TIME_LIMIT = 30 * 1000;
+  config.ROUND_TIME_LIMIT = 20 * 1000;
+  // 玩家离线限制
+  config.OFFLINE_TIME_LIMIT = 5 * 1000;
 
   return config;
 };

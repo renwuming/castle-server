@@ -19,6 +19,8 @@ export class GameService {
   playerService: PlayerService;
   @config()
   ROUND_TIME_LIMIT: number;
+  @config()
+  OFFLINE_TIME_LIMIT: number;
 
   /**
    * 获取游戏列表
@@ -95,6 +97,9 @@ export class GameService {
       roundHistory: [],
       ownPlayer: userID,
       players: [firstPlayer],
+      onlineTimeStampMap: {
+        [userID]: Date.now(),
+      },
     };
     const { _id } = await this.gameBaseService.insert(gameData);
     return {
@@ -113,7 +118,8 @@ export class GameService {
     }
   > {
     const game = await this.gameBaseService.getById(id);
-    const { ownPlayer, players, roundData, end } = game;
+    const timeStamp = Date.now();
+    const { ownPlayer, players, roundData, end, onlineTimeStampMap } = game;
     const { _id } = this.ctx.state.user;
     const ownGame = this.utils.isEqualStr(_id, ownPlayer);
     const inGame = players.map((item) => item._id).includes(_id);
@@ -124,6 +130,15 @@ export class GameService {
       ownTurn = playerIndex === player;
     }
 
+    // 处理玩家在线状态
+    const map = new Map(Object.entries(onlineTimeStampMap));
+    players.forEach((player) => {
+      const { _id } = player;
+      const lastOnline = map.get(_id) as number;
+      const online = timeStamp - lastOnline < this.OFFLINE_TIME_LIMIT;
+      player.online = online;
+    });
+
     // 处理players的移动、攻击范围
     const playersWithMoveAttackRange = this.playerService.getPlayersWithMoveAttackRange(
       players
@@ -131,7 +146,6 @@ export class GameService {
 
     // 处理倒计时
     if (roundData) {
-      const timeStamp = Date.now();
       const { autoEndAt } = roundData;
       const countdown = ~~((autoEndAt - timeStamp) / 1000);
       roundData.countdown = countdown > 0 ? countdown : 0;
@@ -592,5 +606,20 @@ export class GameService {
       ServantSum,
       NoRoleSum,
     };
+  }
+
+  public async updateOnlineTimeStampMap(id: string) {
+    const game = await this.gameBaseService.getById(id);
+    const { onlineTimeStampMap } = game;
+    const { _id } = this.ctx.state.user;
+    const map = new Map(Object.entries(onlineTimeStampMap));
+    map.set(_id, Date.now());
+
+    await this.gameBaseService.update({
+      _id: id,
+      updates: {
+        onlineTimeStampMap: map,
+      },
+    });
   }
 }

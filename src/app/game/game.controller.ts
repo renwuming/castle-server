@@ -25,6 +25,7 @@ export class GameController {
   @get("/:id", { middleware: ["authMiddleware", "apiMiddleware"] })
   public async getGame(): Promise<void> {
     const { id } = this.ctx.params;
+    await this.gameService.updateOnlineTimeStampMap(id);
     this.ctx.body = await this.gameService.getGame(id);
   }
 
