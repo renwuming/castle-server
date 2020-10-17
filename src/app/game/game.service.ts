@@ -19,8 +19,6 @@ export class GameService {
   playerService: PlayerService;
   @config()
   ROUND_TIME_LIMIT: number;
-  @config()
-  OFFLINE_TIME_LIMIT: number;
 
   /**
    * 获取游戏列表
@@ -131,13 +129,7 @@ export class GameService {
     }
 
     // 处理玩家在线状态
-    const map = new Map(Object.entries(onlineTimeStampMap));
-    players.forEach((player) => {
-      const { _id } = player;
-      const lastOnline = map.get(_id) as number;
-      const online = timeStamp - lastOnline < this.OFFLINE_TIME_LIMIT;
-      player.online = online;
-    });
+    this.playerService.handlePlayersOnline(players, onlineTimeStampMap);
 
     // 处理players的移动、攻击范围
     const playersWithMoveAttackRange = this.playerService.getPlayersWithMoveAttackRange(
@@ -195,10 +187,21 @@ export class GameService {
   }
 
   public async startGame(id: string) {
-    const { ownPlayer, players } = await this.gameBaseService.getById(id);
+    const {
+      ownPlayer,
+      players,
+      onlineTimeStampMap,
+    } = await this.gameBaseService.getById(id);
     const { _id } = this.ctx.state.user;
+    // 处理玩家在线状态
+    this.playerService.handlePlayersOnline(players, onlineTimeStampMap);
+    const allOnline = players.every((player) => player.online);
+    // 并非所有人在线
+    if (!allOnline) {
+      throw new BadRequestError("有玩家离线，无法开始游戏");
+    }
     // 人数小于等于1
-    if (players.length <= 1) {
+    else if (players.length <= 1) {
       throw new BadRequestError("人数不足");
     }
     // 若是房主

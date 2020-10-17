@@ -1,4 +1,4 @@
-import { provide, inject } from "midway";
+import { provide, inject, config } from "midway";
 import {
   selectShieldList,
   maidservantRole,
@@ -9,6 +9,8 @@ import { BadRequestError } from "egg-errors";
 
 @provide()
 export class PlayerService {
+  @config()
+  OFFLINE_TIME_LIMIT: number;
   @inject()
   utils: Utils;
 
@@ -721,5 +723,15 @@ export class PlayerService {
       players,
       roundData,
     };
+  }
+
+  public handlePlayersOnline(players: Player[], onlineTimeStampMap: any) {
+    const map = new Map(Object.entries(onlineTimeStampMap));
+    players.forEach((player) => {
+      const { _id } = player;
+      const lastOnline = map.get(_id) as number;
+      const online = Date.now() - lastOnline < this.OFFLINE_TIME_LIMIT;
+      player.online = online;
+    });
   }
 }
