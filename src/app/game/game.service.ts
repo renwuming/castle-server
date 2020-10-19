@@ -128,7 +128,7 @@ export class GameService {
       ownTurn = playerIndex === player;
     }
 
-    // 处理玩家在线状态
+    // 处理玩家在线状态、托管状态
     this.playerService.handlePlayersOnline(players, onlineTimeStampMap);
 
     // 处理players的移动、攻击范围
@@ -136,8 +136,8 @@ export class GameService {
       players
     );
 
-    // 处理倒计时
     if (roundData) {
+      // 处理倒计时
       const { autoEndAt } = roundData;
       const countdown = ~~((autoEndAt - timeStamp) / 1000);
       roundData.countdown = countdown > 0 ? countdown : 0;
@@ -222,14 +222,8 @@ export class GameService {
   }
 
   public async updateGame(id: string, round: Partial<Round>): Promise<Round> {
-    const {
-      roundData,
-      players,
-      cards,
-      start,
-      end,
-      roundHistory,
-    } = await this.gameBaseService.getById(id);
+    const gameData = await this.gameBaseService.getById(id);
+    const { roundData, players, cards, start, end, roundHistory } = gameData;
     // game未开始或已结束
     if (!start || end) {
       throw new BadRequestError("游戏未开始或已结束");
@@ -237,9 +231,18 @@ export class GameService {
     const { status, player, canMoveLocations, canAttackLocations } = roundData;
     const currentPlayer = players[player];
     const { _id, location } = currentPlayer;
+    const { AutoAciton } = this.ctx.state;
+    const ownTurn = this.ctx.state.user
+      ? _id === this.ctx.state.user._id
+      : false;
     // 判断是否当前行动玩家
-    if (!this.ctx.state.AutoAciton && _id !== this.ctx.state.user._id) {
+    if (!AutoAciton && !ownTurn) {
       throw new UnprocessableEntityError("It's not your turn");
+    }
+
+    // 玩家手动操作，则清除超时记录
+    if (ownTurn) {
+      await this.clearOvertimeRecord(gameData);
     }
 
     const { magicAction } = round;
@@ -622,6 +625,31 @@ export class GameService {
       _id: id,
       updates: {
         onlineTimeStampMap: map,
+      },
+    });
+  }
+
+  public async addOvertimeRecord(data: Game) {
+    let { roundData, players, _id } = data;
+    const { player } = roundData;
+    players[player].overtime = true;
+    await this.gameBaseService.update({
+      _id,
+      updates: {
+        players,
+      },
+    });
+  }
+
+  public async clearOvertimeRecord(data: Game) {
+    let { roundData, players, _id } = data;
+    const { player } = roundData;
+    players[player].overtime = false;
+
+    await this.gameBaseService.update({
+      _id,
+      updates: {
+        players,
       },
     });
   }

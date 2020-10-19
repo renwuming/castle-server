@@ -11,6 +11,8 @@ import { BadRequestError } from "egg-errors";
 export class PlayerService {
   @config()
   OFFLINE_TIME_LIMIT: number;
+  @config()
+  AUTOMATIC_TIME_LIMIT: number;
   @inject()
   utils: Utils;
 
@@ -726,12 +728,36 @@ export class PlayerService {
   }
 
   public handlePlayersOnline(players: Player[], onlineTimeStampMap: any) {
-    const map = new Map(Object.entries(onlineTimeStampMap));
     players.forEach((player) => {
-      const { _id } = player;
-      const lastOnline = map.get(_id) as number;
+      const lastOnline = this.getPlayerLastOnline(player, onlineTimeStampMap);
       const online = Date.now() - lastOnline < this.OFFLINE_TIME_LIMIT;
       player.online = online;
+      player.automatic = this.isAutomaticPlayer(player, onlineTimeStampMap);
     });
+  }
+
+  public getPlayerLastOnline(player: Player, onlineTimeStampMap: any): number {
+    const map = new Map(Object.entries(onlineTimeStampMap));
+    const { _id } = player;
+    const lastOnline = map.get(_id) as number;
+    return lastOnline;
+  }
+
+  public isAutomaticRound(data: Game): boolean {
+    let { roundData, players, onlineTimeStampMap } = data;
+    const { player } = roundData;
+    const currentPlayer = players[player];
+
+    return this.isAutomaticPlayer(currentPlayer, onlineTimeStampMap);
+  }
+
+  public isAutomaticPlayer(player: Player, onlineTimeStampMap: any): boolean {
+    const { overtime } = player;
+    const lastOnline = this.getPlayerLastOnline(player, onlineTimeStampMap);
+
+    if (overtime && Date.now() - lastOnline > this.AUTOMATIC_TIME_LIMIT) {
+      return true;
+    }
+    return false;
   }
 }

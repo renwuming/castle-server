@@ -19,6 +19,8 @@ export default (appInfo: EggAppInfo) => {
   config.ROUND_TIME_LIMIT = 20 * 1000;
   // 玩家离线限制
   config.OFFLINE_TIME_LIMIT = 5 * 1000;
+  // 玩家进入托管的离线时间限制
+  config.AUTOMATIC_TIME_LIMIT = 2 * 60 * 1000;
 
   return config;
 };

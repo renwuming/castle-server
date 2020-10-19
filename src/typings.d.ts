@@ -75,12 +75,14 @@ interface Player {
   canMoveLocations?: number[];
   canAttackLocations?: number[];
   dead?: boolean;
+  overtime?: boolean; // 最近的回合是否超时
   // 用户信息
   _id: string;
   nickName: string;
   avatarUrl: string;
   // 为前端提供数据时，特有的属性
   online?: boolean; // 是否在线
+  automatic?: boolean; // 是否为托管状态
 }
 
 interface Prop {

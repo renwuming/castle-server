@@ -49,12 +49,20 @@ export class RoundCron implements CommonSchedule {
   async handleGame(data: Game) {
     let { roundData, _id } = data;
     const { startedAt } = roundData;
+    const isAutomaticRound = this.playerService.isAutomaticRound(data);
+    const roundTimeLimit = isAutomaticRound ? 2000 : this.ROUND_TIME_LIMIT;
     // 回合是否超时
-    let overTime = Date.now() - startedAt >= this.ROUND_TIME_LIMIT;
+    let overTime = Date.now() - startedAt >= roundTimeLimit;
+
+    if (overTime) {
+      // 添加超时记录
+      this.gameService.addOvertimeRecord(data);
+    }
+
     for (let i = 0; i < AUTO_ACTION_MAX && overTime; i++) {
       roundData = await this.handleRound(_id, roundData, data);
       const { startedAt, end } = roundData;
-      overTime = !end && Date.now() - startedAt >= this.ROUND_TIME_LIMIT;
+      overTime = !end && Date.now() - startedAt >= roundTimeLimit;
     }
   }
 
