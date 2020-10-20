@@ -198,7 +198,7 @@ export class GameService {
     const allOnline = players.every((player) => player.online);
     // 并非所有人在线
     if (!allOnline) {
-      throw new BadRequestError("有玩家离线，无法开始游戏");
+      // throw new BadRequestError("有玩家离线，无法开始游戏");
     }
     // 人数小于等于1
     else if (players.length <= 1) {
