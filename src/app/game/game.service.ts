@@ -195,13 +195,9 @@ export class GameService {
     const { _id } = this.ctx.state.user;
     // 处理玩家在线状态
     this.playerService.handlePlayersOnline(players, onlineTimeStampMap);
-    const allOnline = players.every((player) => player.online);
-    // 并非所有人在线
-    if (!allOnline) {
-      // throw new BadRequestError("有玩家离线，无法开始游戏");
-    }
+
     // 人数小于等于1
-    else if (players.length <= 1) {
+    if (players.length <= 1) {
       throw new BadRequestError("人数不足");
     }
     // 若是房主
@@ -296,7 +292,8 @@ export class GameService {
           currentPlayer,
           players,
           targetLocation as number,
-          prop
+          prop,
+          roundData
         );
         players[player] = newCurrentPlayer;
         // 处理回合状态，道具选择
@@ -462,6 +459,7 @@ export class GameService {
       canMoveLocations,
       canAttackLocations,
       magicActions: [],
+      moveLocations: [],
       startedAt: timeStamp,
       autoEndAt: timeStamp + this.ROUND_TIME_LIMIT,
     };

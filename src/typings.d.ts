@@ -51,6 +51,7 @@ interface Round {
   attackLocation?: number;
   targetLocation?: number;
   endLocation?: number;
+  moveLocations: number[];
   prop?: Prop;
   selectProps?: Prop[];
   throwProps?: Prop[];

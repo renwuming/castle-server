@@ -46,7 +46,8 @@ export class PlayerService {
     currentPlayer: Player,
     players: Player[],
     targetLocation: number,
-    prop: Prop | undefined
+    prop: Prop | undefined,
+    round: Round
   ): Player {
     currentPlayer = this.pickProp(currentPlayer, prop);
     const moveWithoutTrap = {
@@ -61,6 +62,8 @@ export class PlayerService {
     if (!key.includes("d")) {
       return moveWithoutTrap;
     } else {
+      // 回合数据中，移动经过的所有坐标
+      const { moveLocations } = round;
       let direction = +key.split("-")[1];
       let endLocation = targetLocation;
       for (let i = 0; i < status; i++) {
@@ -72,6 +75,10 @@ export class PlayerService {
         );
         if (tempLocation >= 0) {
           endLocation = tempLocation;
+          // 更新移动所经过的坐标
+          if (!moveLocations.includes(endLocation)) {
+            moveLocations.push(endLocation);
+          }
         }
         // 若撞墙/撞人，则调转方向
         else {
@@ -84,6 +91,10 @@ export class PlayerService {
           );
           if (tempLocation >= 0) {
             endLocation = tempLocation;
+            // 更新移动所经过的坐标
+            if (!moveLocations.includes(endLocation)) {
+              moveLocations.push(endLocation);
+            }
           }
           // 若调转方向也不行，说明无法移动
           else {
