@@ -178,7 +178,7 @@ export class GameService {
     const { _id } = this.ctx.state.user;
     // 若是房主
     if (this.utils.isEqualStr(ownPlayer, _id)) {
-      const player = this.initPlayerAI();
+      const player = this.initPlayerAI(players);
       if (players.length >= 4) {
         throw new BadRequestError("人数已满");
       } else {
@@ -209,6 +209,7 @@ export class GameService {
 
   public async startGame(id: string) {
     const {
+      cards,
       ownPlayer,
       players,
       onlineTimeStampMap,
@@ -230,7 +231,7 @@ export class GameService {
           start: true,
           players: startPlayers,
           startedAt: new Date(),
-          roundData: this.initRound(startPlayers[0], startPlayers),
+          roundData: this.initRound(startPlayers[0], startPlayers, cards),
         },
       });
     } else {
@@ -335,14 +336,19 @@ export class GameService {
       }
       // 玩家选择攻击
       else if (validAttack && attackFlag) {
-        const newPlayers = this.playerService.attackPlayerOnLocation(
+        const {
+          players: newPlayers,
+          attackDetail,
+        } = this.playerService.attackPlayerOnLocation(
           attackLocation as number,
-          players
+          players,
+          player
         );
         newRoundData = {
           ...roundData,
           status: 2 as RoundStatus,
           attackLocation,
+          attackDetail,
         };
         // 更新game的roundData数据
         await this.gameBaseService.update({
@@ -453,6 +459,7 @@ export class GameService {
       magics: [],
       target: -1,
       status: [],
+      killSum: 0,
       // 以下属性将被user覆盖
       _id: "",
       nickName: "",
@@ -461,7 +468,8 @@ export class GameService {
     };
   }
 
-  private initPlayerAI() {
+  private initPlayerAI(players: Player[]): Player {
+    const AISum = players.filter((e) => e.ai).length;
     return {
       index: -1,
       location: -1,
@@ -470,14 +478,19 @@ export class GameService {
       magics: [],
       target: -1,
       status: [],
+      killSum: 0,
       _id: v4(),
-      nickName: "古堡幽灵",
+      nickName: `古堡幽灵${AISum + 1}`,
       avatarUrl: "https://cdn.renwuming.cn/static/escape/ai.png",
       ai: true,
     };
   }
 
-  private initRound(currentPlayer: Player, players: Player[]): Round {
+  private initRound(
+    currentPlayer: Player,
+    players: Player[],
+    cards: Card[]
+  ): Round {
     const { index, location } = currentPlayer;
     const canMoveLocations = this.playerService.canMoveLocations(
       currentPlayer,
@@ -490,6 +503,8 @@ export class GameService {
 
     const timeStamp = Date.now();
     return {
+      cards,
+      players: players,
       player: index,
       startLocation: location,
       status: -1,
@@ -546,7 +561,7 @@ export class GameService {
           nextPlayer,
           newPlayers: finalPlayers,
         } = this.playerService.getNextPlayer(player, newPlayers);
-        const newRoundData = this.initRound(nextPlayer, finalPlayers);
+        const newRoundData = this.initRound(nextPlayer, finalPlayers, cards);
         return {
           ...newPlayersAndCards,
           players: finalPlayers,

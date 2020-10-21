@@ -550,10 +550,19 @@ export class PlayerService {
   }
 
   // 攻击
-  attackPlayerOnLocation(location: number, players: Player[]): Player[] {
+  attackPlayerOnLocation(
+    location: number,
+    players: Player[],
+    currentPlayerIndex: number
+  ): { players: Player[]; attackDetail: AttackDetail } {
     const player = this.getPlayerByLocation(location, players);
+    const attackDetail: AttackDetail = {
+      kill: false,
+      attackPlayerIndex: -1,
+    };
     if (player) {
       const { index } = player;
+      attackDetail.attackPlayerIndex = index;
       // 若有盾
       const shield = this.hasEquipment(player, "e-2/1");
       // 则丢弃一个盾
@@ -568,9 +577,14 @@ export class PlayerService {
           ...player,
           dead: true,
         };
+        attackDetail.kill = true;
+        players[currentPlayerIndex].killSum += 1;
       }
     }
-    return players;
+    return {
+      players,
+      attackDetail,
+    };
   }
 
   getPlayerByLocation(location: number, players: Player[]): Player | undefined {

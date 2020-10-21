@@ -41,6 +41,8 @@ interface Game {
 type RoundStatus = -1 | 0 | 1 | 2; // 枚举值，-1 未移动，0 完成移动但未完成刃盾选择，1 完成移动但需要丢弃装备，2 完成移动
 
 interface Round {
+  cards: Card[]; // 回合开始时的card数据
+  players: Player[]; // 回合开始时的所有玩家数据
   player: number;
   status: RoundStatus;
   canMoveLocations: number[];
@@ -49,6 +51,7 @@ interface Round {
   magicAction?: MagicAction; // 当前使用的魔法
   magicActions: MagicAction[]; // 当回合使用过的魔法列表
   attackLocation?: number;
+  attackDetail?: AttackDetail;
   targetLocation?: number;
   endLocation?: number;
   moveLocations: number[];
@@ -64,6 +67,11 @@ interface Round {
   countdown?: number; // 回合自动结束倒计时，单位秒
 }
 
+interface AttackDetail {
+  kill: boolean;
+  attackPlayerIndex: number;
+}
+
 interface Player {
   // 游戏数据
   index: number;
@@ -75,6 +83,7 @@ interface Player {
   status: number[]; // 玩家状态：0 被冰冻
   canMoveLocations?: number[];
   canAttackLocations?: number[];
+  killSum: number;
   dead?: boolean;
   overtime?: boolean; // 最近的回合是否超时
   ai?: boolean; // 是否为AI
