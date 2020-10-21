@@ -455,7 +455,9 @@ export class PlayerService {
       const isKnight = roles.some((role) => role.key === "r-1");
       // 若是叛军骑士，则不覆盖角色
       if (isKnight) player.roles.unshift(prop);
-      else player.roles.push(prop);
+      else if (!roles.map((item) => item.key).includes(key)) {
+        player.roles.push(prop);
+      }
     }
     return player;
   }
