@@ -77,6 +77,7 @@ interface Player {
   canAttackLocations?: number[];
   dead?: boolean;
   overtime?: boolean; // 最近的回合是否超时
+  ai?: boolean; // 是否为AI
   // 用户信息
   _id: string;
   nickName: string;

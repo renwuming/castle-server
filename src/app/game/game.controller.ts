@@ -36,6 +36,13 @@ export class GameController {
     await this.gameService.joinGame(id);
     this.ctx.body = {};
   }
+  // 加入AI
+  @post("/:id/join/ai", { middleware: ["authMiddleware", "apiMiddleware"] })
+  public async joinAI(): Promise<void> {
+    const { id } = this.ctx.params;
+    await this.gameService.joinAI(id);
+    this.ctx.body = {};
+  }
 
   // 离开game
   @post("/:id/leave", { middleware: ["authMiddleware", "apiMiddleware"] })

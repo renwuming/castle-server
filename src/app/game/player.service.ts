@@ -740,9 +740,11 @@ export class PlayerService {
 
   public handlePlayersOnline(players: Player[], onlineTimeStampMap: any) {
     players.forEach((player) => {
+      const { ai } = player;
       const lastOnline = this.getPlayerLastOnline(player, onlineTimeStampMap);
       const online = Date.now() - lastOnline < this.OFFLINE_TIME_LIMIT;
-      player.online = online;
+      // AI永远在线
+      player.online = ai || online;
       player.automatic = this.isAutomaticPlayer(player, onlineTimeStampMap);
     });
   }
@@ -758,8 +760,9 @@ export class PlayerService {
     let { roundData, players, onlineTimeStampMap } = data;
     const { player } = roundData;
     const currentPlayer = players[player];
+    const { ai } = currentPlayer;
 
-    return this.isAutomaticPlayer(currentPlayer, onlineTimeStampMap);
+    return ai || this.isAutomaticPlayer(currentPlayer, onlineTimeStampMap);
   }
 
   public isAutomaticPlayer(player: Player, onlineTimeStampMap: any): boolean {

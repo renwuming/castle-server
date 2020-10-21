@@ -172,6 +172,27 @@ export class GameService {
     }
   }
 
+  // 为游戏添加AI玩家
+  public async joinAI(id: string) {
+    const { players, ownPlayer } = await this.gameBaseService.getById(id);
+    const { _id } = this.ctx.state.user;
+    // 若是房主
+    if (this.utils.isEqualStr(ownPlayer, _id)) {
+      const player = this.initPlayerAI();
+      if (players.length >= 4) {
+        throw new BadRequestError("人数已满");
+      } else {
+        players.push(player);
+        await this.gameBaseService.update({
+          _id: id,
+          updates: {
+            players,
+          },
+        });
+      }
+    }
+  }
+
   public async leaveGame(id: string) {
     const { _id } = this.ctx.state.user;
     const { players } = await this.gameBaseService.getById(id);
@@ -437,6 +458,22 @@ export class GameService {
       nickName: "",
       avatarUrl: "",
       ...user,
+    };
+  }
+
+  private initPlayerAI() {
+    return {
+      index: -1,
+      location: -1,
+      roles: [],
+      equipments: [],
+      magics: [],
+      target: -1,
+      status: [],
+      _id: v4(),
+      nickName: "古堡幽灵",
+      avatarUrl: "https://cdn.renwuming.cn/static/escape/ai.png",
+      ai: true,
     };
   }
 

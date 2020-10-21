@@ -50,7 +50,7 @@ export class RoundCron implements CommonSchedule {
     let { roundData, _id } = data;
     const { startedAt } = roundData;
     const isAutomaticRound = this.playerService.isAutomaticRound(data);
-    const roundTimeLimit = isAutomaticRound ? 2000 : this.ROUND_TIME_LIMIT;
+    const roundTimeLimit = isAutomaticRound ? 1000 : this.ROUND_TIME_LIMIT;
     // 回合是否超时
     let overTime = Date.now() - startedAt >= roundTimeLimit;
 
