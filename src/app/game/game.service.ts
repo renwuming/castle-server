@@ -209,7 +209,6 @@ export class GameService {
 
   public async startGame(id: string) {
     const {
-      cards,
       ownPlayer,
       players,
       onlineTimeStampMap,
@@ -231,7 +230,7 @@ export class GameService {
           start: true,
           players: startPlayers,
           startedAt: new Date(),
-          roundData: this.initRound(startPlayers[0], startPlayers, cards),
+          roundData: this.initRound(startPlayers[0], startPlayers),
         },
       });
     } else {
@@ -486,11 +485,7 @@ export class GameService {
     };
   }
 
-  private initRound(
-    currentPlayer: Player,
-    players: Player[],
-    cards: Card[]
-  ): Round {
+  private initRound(currentPlayer: Player, players: Player[]): Round {
     const { index, location } = currentPlayer;
     const canMoveLocations = this.playerService.canMoveLocations(
       currentPlayer,
@@ -503,8 +498,6 @@ export class GameService {
 
     const timeStamp = Date.now();
     return {
-      cards,
-      players: players,
       player: index,
       startLocation: location,
       status: -1,
@@ -561,7 +554,7 @@ export class GameService {
           nextPlayer,
           newPlayers: finalPlayers,
         } = this.playerService.getNextPlayer(player, newPlayers);
-        const newRoundData = this.initRound(nextPlayer, finalPlayers, cards);
+        const newRoundData = this.initRound(nextPlayer, finalPlayers);
         return {
           ...newPlayersAndCards,
           players: finalPlayers,

@@ -41,8 +41,6 @@ interface Game {
 type RoundStatus = -1 | 0 | 1 | 2; // 枚举值，-1 未移动，0 完成移动但未完成刃盾选择，1 完成移动但需要丢弃装备，2 完成移动
 
 interface Round {
-  cards: Card[]; // 回合开始时的card数据
-  players: Player[]; // 回合开始时的所有玩家数据
   player: number;
   status: RoundStatus;
   canMoveLocations: number[];
