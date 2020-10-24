@@ -18,7 +18,8 @@ export class AuthMiddleware implements WebMiddleware {
 
   public resolve(): Middleware {
     return async (ctx, next) => {
-      if (this.autoAuth) {
+      const tourist = ctx.request.header["x-tourist"];
+      if (tourist && this.autoAuth) {
         this.handleAutoAuthUser(ctx);
         await next();
       } else {
@@ -35,7 +36,7 @@ export class AuthMiddleware implements WebMiddleware {
     }
     ctx.state.user = {
       _id: `test-id-${ticket}`,
-      nickName: `测试账号-${ticket}`,
+      nickName: `游客账号-${ticket}`,
       avatarUrl:
         "http://thirdwx.qlogo.cn/mmopen/vi_32/95toQN7kMtpJnzVgWHlLbicOb0dsvvicpsc6jNBMV4Yd8fzOwrRRDXYodQstktl9ysic0lK8GBlab5xa1y0lMtaMw/132",
     };
