@@ -3,9 +3,13 @@ import {
   selectShieldList,
   maidservantRole,
   knightRole,
+  shieldKeyStatusList,
+  magicDisarm,
+  magicFreeze,
 } from "@/lib/gameHelper";
 import { Utils } from "@/lib/utils";
 import { BadRequestError } from "egg-errors";
+import { isEqual, uniq } from "lodash";
 
 @provide()
 export class PlayerService {
@@ -196,7 +200,7 @@ export class PlayerService {
     let ATTACK = KNIGHT ? 2 : 1; // 攻击距离
     let TILT = false; // 是否可以斜着攻击
     // 【刃】
-    if (this.hasEquipment(currentPlayer, "e-2/0")) {
+    if (this.hasEquipment(currentPlayer, shieldKeyStatusList[0])) {
       TILT = true;
     }
     // 【流星锤】
@@ -324,6 +328,70 @@ export class PlayerService {
     });
   }
 
+  public getCanBeAttackedLocations(
+    player: Player,
+    players: Player[]
+  ): number[] {
+    const { index } = player;
+    const playersWithRange = this.getPlayersWithMoveAttackRange(players);
+    const canBeAttackedLocations = playersWithRange
+      .filter((item) => this.isActive(item) && item.index !== index)
+      .reduce((res: number[], item) => res.concat(item.canAttackLocations), []);
+    return uniq(canBeAttackedLocations);
+  }
+
+  // 可以移动，且不会被攻击的位置
+  public canMoveSafeLocations(player: Player, players: Player[]): number[] {
+    const canBeAttackedLocations = this.getCanBeAttackedLocations(
+      player,
+      players
+    );
+    const canMoveLocations = this.canMoveLocations(player, players);
+    return canMoveLocations.filter(
+      (location) => !canBeAttackedLocations.includes(location)
+    );
+  }
+
+  // 哪些玩家可以攻击到我
+  public getPlayersCanAttackMe(player: Player, players: Player[]): Player[] {
+    const { location } = player;
+    const playersWithRange = this.getPlayersWithMoveAttackRange(players);
+    return playersWithRange.filter((item) => {
+      const { canAttackLocations } = item;
+      // 没有死亡 && 没有被冰冻 && 能够攻击到我
+      return this.isActive(item) && canAttackLocations.includes(location);
+    });
+  }
+
+  // 我是否可以杀死某个玩家
+  public canKillPlayer(
+    me: Player,
+    player: Player,
+    players: Player[],
+    canAttack: boolean = true // 玩家还可以攻击的情况下，是否能杀死
+  ): boolean {
+    const canAttackLocations = this.canAttackLocations(me, players);
+    const { magics } = me;
+    const { location, equipments } = player;
+    // 我无法行动，则直接返回
+    if (!this.isActive(me)) return false;
+    // 不在攻击范围内，则直接返回
+    if (!canAttackLocations.includes(location)) return false;
+    const magicCount = magics.length;
+    const shieldCount = equipments.filter((item) =>
+      isEqual(item, selectShieldList[1])
+    ).length;
+    // 玩家可以攻击时，魔法数量 >= 盾的数量时，可以杀死
+    if (canAttack) {
+      return magicCount >= shieldCount;
+    }
+    // 否则，必须有一个【冰弹】，且魔法数量 >= 盾的数量+1时，才可以杀死
+    else {
+      const hasFreeze = this.hasMagic(me, magicFreeze.key);
+      return hasFreeze && magicCount >= shieldCount + 1;
+    }
+  }
+
   // 判断是否为【叛军骑士】
   public isKnight(player: Player): boolean {
     const { roles } = player;
@@ -335,7 +403,13 @@ export class PlayerService {
     return !this.isKnight(player) && roles.length > 0;
   }
 
-  private hasEquipment(player: Player, key: string): boolean {
+  // 可行动的玩家：未死亡，未被冰冻
+  isActive(player: Player): boolean {
+    const { dead } = player;
+    return !dead && !this.isFreezed(player);
+  }
+
+  public hasEquipment(player: Player, key: string): boolean {
     const { equipments } = player;
     return equipments
       .map((prop) => {
@@ -564,7 +638,7 @@ export class PlayerService {
       const { index } = player;
       attackDetail.attackPlayerIndex = index;
       // 若有盾
-      const shield = this.hasEquipment(player, "e-2/1");
+      const shield = this.hasEquipment(player, shieldKeyStatusList[1]);
       // 则丢弃一个盾
       if (shield) {
         players[index] = this.throwProp(
@@ -587,7 +661,10 @@ export class PlayerService {
     };
   }
 
-  getPlayerByLocation(location: number, players: Player[]): Player | undefined {
+  public getPlayerByLocation(
+    location: number,
+    players: Player[]
+  ): Player | undefined {
     let targetPlayer;
     players.forEach((player) => {
       const { location: playerLocation } = player;
@@ -727,6 +804,10 @@ export class PlayerService {
     if (!targetPlayer || targetPlayer.dead) {
       throw new BadRequestError("参数无效");
     }
+    // 【缴械】必须有目标装备
+    if (key === magicDisarm.key && !targetEquipment) {
+      throw new BadRequestError("参数无效");
+    }
     // 加入当前回合使用的魔法列表
     roundData.magicActions.push(magicAction);
     // 当前玩家，消耗魔法
@@ -736,15 +817,15 @@ export class PlayerService {
       "magics"
     );
     // 【缴械】
-    if (key === "m-1") {
+    if (key === magicDisarm.key) {
       players[target] = this.throwProp(
-        targetEquipment,
+        targetEquipment as Prop,
         players[target],
         "equipments"
       );
     }
     // 【冰弹】
-    else if (key === "m-2") {
+    else if (key === magicFreeze.key) {
       players[target].status.push(0);
     }
 
@@ -789,5 +870,18 @@ export class PlayerService {
       return true;
     }
     return false;
+  }
+
+  public calculateDistanceBetweenLocations(
+    location1: number,
+    location2: number,
+    sideLength: number = 8
+  ): number {
+    const x1 = location1 % sideLength;
+    const x2 = location2 % sideLength;
+    const y1 = ~~(location1 / sideLength);
+    const y2 = ~~(location2 / sideLength);
+
+    return Math.abs(x1 - x2) + Math.abs(y1 - y2);
   }
 }

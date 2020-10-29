@@ -459,6 +459,8 @@ export class GameService {
       target: -1,
       status: [],
       killSum: 0,
+      canMoveLocations: [],
+      canAttackLocations: [],
       // 以下属性将被user覆盖
       _id: "",
       nickName: "",
@@ -478,6 +480,8 @@ export class GameService {
       target: -1,
       status: [],
       killSum: 0,
+      canMoveLocations: [],
+      canAttackLocations: [],
       _id: v4(),
       nickName: `古堡幽灵${AISum + 1}`,
       avatarUrl: "https://cdn.renwuming.cn/static/escape/ai.png",

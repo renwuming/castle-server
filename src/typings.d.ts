@@ -33,6 +33,8 @@ interface Game {
   end: boolean;
   endedAt: Date;
   winner: number;
+  // 定时任务锁
+  lock?: boolean;
 }
 
 /**
@@ -79,8 +81,8 @@ interface Player {
   magics: Prop[];
   target: number;
   status: number[]; // 玩家状态：0 被冰冻
-  canMoveLocations?: number[];
-  canAttackLocations?: number[];
+  canMoveLocations: number[];
+  canAttackLocations: number[];
   killSum: number;
   dead?: boolean;
   overtime?: boolean; // 最近的回合是否超时
@@ -111,7 +113,7 @@ interface Card {
 interface MagicAction {
   magic: Prop;
   target: number;
-  targetEquipment: Prop;
+  targetEquipment?: Prop;
 }
 
 /**

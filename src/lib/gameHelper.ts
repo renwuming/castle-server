@@ -19,6 +19,22 @@ export const knightRole: Prop = {
   status: -1,
 };
 
+export const magicDisarm: Prop = {
+  name: "缴械",
+  imgUrl: "https://cdn.renwuming.cn/static/escape/m-1.jpg",
+  imgHdUrl: "https://cdn.renwuming.cn/static/escape/m-1-hd.jpg",
+  key: "m-1",
+  status: -1,
+};
+
+export const magicFreeze: Prop = {
+  name: "冰弹",
+  imgUrl: "https://cdn.renwuming.cn/static/escape/m-2.jpg",
+  imgHdUrl: "https://cdn.renwuming.cn/static/escape/m-2-hd.jpg",
+  key: "m-2",
+  status: -1,
+};
+
 export const propsConfig: PropConfig[] = [
   // 装备
   {
@@ -63,23 +79,11 @@ export const propsConfig: PropConfig[] = [
   },
   // 魔法
   {
-    data: {
-      name: "缴械",
-      imgUrl: "https://cdn.renwuming.cn/static/escape/m-1.jpg",
-      imgHdUrl: "https://cdn.renwuming.cn/static/escape/m-1-hd.jpg",
-      key: "m-1",
-      status: -1,
-    },
+    data: magicDisarm,
     count: 4,
   },
   {
-    data: {
-      name: "冰弹",
-      imgUrl: "https://cdn.renwuming.cn/static/escape/m-2.jpg",
-      imgHdUrl: "https://cdn.renwuming.cn/static/escape/m-2-hd.jpg",
-      key: "m-2",
-      status: -1,
-    },
+    data: magicFreeze,
     count: 4,
   },
   // 陷阱
@@ -252,3 +256,5 @@ export const selectShieldList: Prop[] = [
     status: 1,
   },
 ];
+
+export const shieldKeyStatusList: string[] = ["e-2/0", "e-2/1"];

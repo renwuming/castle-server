@@ -17,6 +17,7 @@ export class GameModel {
     roundData: Object,
     roundHistory: Array,
     onlineTimeStampMap: Object,
+    lock: Boolean,
   };
 
   private schemaOption = {
