@@ -471,6 +471,11 @@ export class GameService {
 
   private initPlayerAI(players: Player[]): Player {
     const AISum = players.filter((e) => e.ai).length;
+    const nameMap = {
+      1: "可爱的公主",
+      2: "忧郁的公主",
+      3: "妩媚的公主",
+    };
     return {
       index: -1,
       location: -1,
@@ -483,8 +488,10 @@ export class GameService {
       canMoveLocations: [],
       canAttackLocations: [],
       _id: v4(),
-      nickName: `古堡幽灵${AISum + 1}`,
-      avatarUrl: "https://cdn.renwuming.cn/static/escape/ai.png",
+      nickName: nameMap[AISum + 1],
+      avatarUrl: `https://cdn.renwuming.cn/static/escape/ai-heads/${
+        AISum + 1
+      }.jpg`,
       ai: true,
     };
   }
