@@ -58,7 +58,7 @@ export class RoundCron implements CommonSchedule {
   }
 
   async handleGame(data: Game) {
-    let { roundData, _id, lock } = data;
+    let { roundData, _id, lock, players } = data;
     if (lock) return;
     // 添加锁
     await this.gameBaseService.update({
@@ -67,7 +67,9 @@ export class RoundCron implements CommonSchedule {
         lock: true,
       },
     });
-    const { startedAt } = roundData;
+    const { startedAt, player } = roundData;
+    const currentPlayer = players[player];
+    const { ai } = currentPlayer;
     const isAutomaticRound = this.playerService.isAutomaticRound(data);
     const roundTimeLimit = isAutomaticRound ? 2000 : this.ROUND_TIME_LIMIT;
     // 回合是否超时
@@ -79,7 +81,11 @@ export class RoundCron implements CommonSchedule {
     }
 
     for (let i = 0; i < AUTO_ACTION_MAX && overTime; i++) {
-      roundData = await this.handleRound(_id, roundData);
+      if (ai) {
+        roundData = await this.handleAIRound(_id, roundData);
+      } else {
+        roundData = await this.handleRound(_id, roundData);
+      }
       const { startedAt, end } = roundData;
       overTime = !end && Date.now() - startedAt >= roundTimeLimit;
       await this.utils.sleep(this.AI_WAIT_TIME);
@@ -94,7 +100,7 @@ export class RoundCron implements CommonSchedule {
     });
   }
 
-  async handleRound(id: string, round: Round): Promise<Round> {
+  async handleAIRound(id: string, round: Round): Promise<Round> {
     const { status, canAttackLocations, throwProps } = round;
     const game = await this.gameBaseService.getById(id);
     let newRound: Round = round;
@@ -136,6 +142,54 @@ export class RoundCron implements CommonSchedule {
     else if (status === 2) {
       // 智能施放魔法
       await this.selectMagic(round, game);
+      newRound = await this.gameService.updateGame(id, {
+        end: true,
+      });
+    }
+    return newRound;
+  }
+
+  async handleRound(id: string, round: Round): Promise<Round> {
+    const {
+      status,
+      canAttackLocations,
+      canMoveLocations,
+      selectProps,
+      throwProps,
+    } = round;
+    let newRound: Round = round;
+    // 若尚未移动/攻击
+    if (status === -1) {
+      // 随机攻击/移动
+      const locations = canAttackLocations.concat(canMoveLocations);
+      const location = shuffle(locations)[0];
+      if (canMoveLocations.includes(location)) {
+        newRound = await this.gameService.updateGame(id, {
+          targetLocation: location,
+        });
+      } else {
+        newRound = await this.gameService.updateGame(id, {
+          attackLocation: location,
+        });
+      }
+    }
+    // 选择获得道具
+    else if (status === 0) {
+      const prop = shuffle(selectProps || [])[0];
+      newRound = await this.gameService.updateGame(id, {
+        prop,
+      });
+    }
+    // 选择丢弃道具
+    else if (status === 1) {
+      const props = shuffle(throwProps || []);
+      const randomProp = props[0];
+      newRound = await this.gameService.updateGame(id, {
+        prop: randomProp,
+      });
+    }
+    // 回合已经可以结束
+    else if (status === 2) {
       newRound = await this.gameService.updateGame(id, {
         end: true,
       });

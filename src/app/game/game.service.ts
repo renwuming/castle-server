@@ -472,9 +472,9 @@ export class GameService {
   private initPlayerAI(players: Player[]): Player {
     const AISum = players.filter((e) => e.ai).length;
     const nameMap = {
-      1: "可爱的公主",
-      2: "忧郁的公主",
-      3: "妩媚的公主",
+      1: "可爱公主",
+      2: "忧郁公主",
+      3: "妩媚公主",
     };
     return {
       index: -1,
