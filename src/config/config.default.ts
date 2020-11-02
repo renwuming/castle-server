@@ -13,6 +13,12 @@ export default (appInfo: EggAppInfo) => {
   // add your config here
   config.middleware = [];
 
+  // 允许跨域请求
+  exports.cors = {
+    origin: "*",
+    allowMethods: "GET,HEAD,PUT,POST,DELETE,PATCH",
+  };
+
   config.autoAuth = process.env.AUTO_AUTH;
 
   // 每回合限时

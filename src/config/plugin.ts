@@ -2,7 +2,7 @@
 import "../app/utils/fixPath";
 
 export const cors = {
-  enable: false,
+  enable: true,
   package: "egg-cors",
 };
 
