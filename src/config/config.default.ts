@@ -26,7 +26,7 @@ export default (appInfo: EggAppInfo) => {
   // 玩家离线限制
   config.OFFLINE_TIME_LIMIT = 2 * 1000;
   // AI行动等待时间
-  config.AI_WAIT_TIME = 1 * 1000;
+  config.AI_WAIT_TIME = 1.5 * 1000;
   // 玩家进入托管的离线时间限制
   config.AUTOMATIC_TIME_LIMIT = 2 * 60 * 1000;
 
