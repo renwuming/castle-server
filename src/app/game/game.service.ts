@@ -154,8 +154,8 @@ export class GameService {
   }
 
   public async joinGame(id: string) {
-    const player = this.initPlayerByUser(this.ctx.state.user);
     const { players } = await this.gameBaseService.getById(id);
+    const player = this.initPlayerByUser(this.ctx.state.user, players);
     const { _id } = player;
     if (players.map((item) => item._id).includes(_id)) {
       return;
@@ -449,9 +449,12 @@ export class GameService {
     return startPlayers;
   }
 
-  private initPlayerByUser(user: Partial<Player>): Player {
+  private initPlayerByUser(
+    user: Partial<Player>,
+    players: Player[] = []
+  ): Player {
     return {
-      index: -1,
+      index: players.length,
       location: -1,
       roles: [],
       equipments: [],
@@ -477,7 +480,7 @@ export class GameService {
       3: "妩媚公主",
     };
     return {
-      index: -1,
+      index: players.length,
       location: -1,
       roles: [],
       equipments: [],
