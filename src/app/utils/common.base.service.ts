@@ -124,4 +124,9 @@ export default class BaseService<T = any> {
   delete = async (uuid: UUID): Promise<void> => {
     await this.model.findOneAndRemove({ uuid });
   };
+
+  // Delete by uuid
+  remove = async (id: UUID): Promise<void> => {
+    await this.model.findOneAndRemove({ _id: id });
+  };
 }

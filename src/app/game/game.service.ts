@@ -78,6 +78,9 @@ export class GameService {
       initProps = initProps.concat(list);
     });
     initProps = shuffle(initProps);
+    initProps.forEach((prop, index) => {
+      prop.id = index;
+    });
     const cards = initProps.map((prop, index) => ({
       id: index,
       prop,
@@ -169,6 +172,27 @@ export class GameService {
           players,
         },
       });
+    }
+  }
+
+  public async quitGame(id: string) {
+    const { players, ownPlayer } = await this.gameBaseService.getById(id);
+    const { _id: userID } = this.ctx.state.user;
+
+    // 如果是房主，则解散游戏
+    if (userID === ownPlayer) {
+      await this.gameBaseService.remove(id);
+    } else {
+      const index = players.map((item) => item._id).indexOf(userID);
+      if (index >= 0) {
+        players.splice(index, 1);
+        await this.gameBaseService.update({
+          _id: id,
+          updates: {
+            players,
+          },
+        });
+      }
     }
   }
 

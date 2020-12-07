@@ -97,6 +97,7 @@ interface Player {
 }
 
 interface Prop {
+  id?: number;
   name: string;
   imgUrl: string;
   imgHdUrl: string;
