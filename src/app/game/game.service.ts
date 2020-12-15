@@ -74,7 +74,10 @@ export class GameService {
     let initProps: Prop[] = [];
     propsConfig.forEach((item) => {
       const { data, count } = item;
-      const list: Prop[] = Array(count).fill(data);
+      const list: Prop[] = [];
+      for (let i = 0; i < count; i++) {
+        list.push(Object.assign({}, data));
+      }
       initProps = initProps.concat(list);
     });
     initProps = shuffle(initProps);
