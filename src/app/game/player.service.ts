@@ -9,7 +9,7 @@ import {
 } from "@/lib/gameHelper";
 import { Utils } from "@/lib/utils";
 import { BadRequestError } from "egg-errors";
-import { isEqual, uniq } from "lodash";
+import { uniq } from "lodash";
 
 @provide()
 export class PlayerService {
@@ -379,7 +379,7 @@ export class PlayerService {
     if (!canAttackLocations.includes(location)) return false;
     const magicCount = magics.length;
     const shieldCount = equipments.filter((item) =>
-      isEqual(item, selectShieldList[1])
+      this.utils.isEqualProp(item, selectShieldList[1])
     ).length;
     // 玩家可以攻击时，魔法数量 >= 盾的数量时，可以杀死
     if (canAttack) {
@@ -512,6 +512,15 @@ export class PlayerService {
     return flag;
   }
 
+  addIDForSelectShieldList(prop: Prop | undefined): Prop[] {
+    if (!prop) return [];
+    return selectShieldList.map((item) => {
+      const _item = Object.assign({}, item);
+      _item.id = prop.id;
+      return _item;
+    });
+  }
+
   public pickProp(
     player: Player,
     prop: Prop | undefined,
@@ -536,8 +545,12 @@ export class PlayerService {
     return player;
   }
 
-  public selectProp(status: number, player: Player): Player {
-    const prop = selectShieldList[status];
+  public selectProp(
+    selectProps: Prop[],
+    status: number,
+    player: Player
+  ): Player {
+    const prop = selectProps[status];
     if (!prop) {
       throw new BadRequestError("参数无效");
     }
@@ -576,7 +589,7 @@ export class PlayerService {
           prop,
           endLocation: location,
           status: 0,
-          selectProps: selectShieldList,
+          selectProps: this.addIDForSelectShieldList(prop),
         };
       }
       // 若玩家装备数量超过限制

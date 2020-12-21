@@ -389,12 +389,13 @@ export class GameService {
     }
     // 移动但未选择道具
     else if (status === 0) {
-      const { prop } = round;
+      const { prop, selectProps } = round;
       if (!prop) {
         throw new BadRequestError("参数无效");
       }
       const { status } = prop;
       const newCurrentPlayer = this.playerService.selectProp(
+        selectProps as Prop[],
         status,
         currentPlayer
       );

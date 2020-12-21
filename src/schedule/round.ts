@@ -199,14 +199,16 @@ export class RoundCron implements CommonSchedule {
 
   AISelectProps(round: Round, game: Game): Prop {
     const { players } = game;
-    const { player } = round;
+    const { player, selectProps } = round;
     const currentPlayer = players[player];
     // 若已经拥有【刃】，则只会选择【盾】
     const hasBlade = this.playerService.hasEquipment(
       currentPlayer,
       shieldKeyStatusList[0]
     );
-    return hasBlade ? selectShieldList[1] : shuffle(selectShieldList)[0];
+    return hasBlade
+      ? (selectProps as Prop[])[1]
+      : shuffle(selectProps as Prop[])[0];
   }
 
   selectLocation(round: Round, game: Game): number {
