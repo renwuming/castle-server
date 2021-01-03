@@ -272,7 +272,13 @@ export class GameService {
     if (!start || end) {
       throw new BadRequestError("游戏未开始或已结束");
     }
-    const { status, player, canMoveLocations, canAttackLocations } = roundData;
+    const {
+      status,
+      player,
+      canMoveLocations,
+      canAttackLocations,
+      selectProps,
+    } = roundData;
     const currentPlayer = players[player];
     const { _id, location } = currentPlayer;
     const { AutoAciton } = this.ctx.state;
@@ -389,7 +395,7 @@ export class GameService {
     }
     // 移动但未选择道具
     else if (status === 0) {
-      const { prop, selectProps } = round;
+      const { prop } = round;
       if (!prop) {
         throw new BadRequestError("参数无效");
       }
