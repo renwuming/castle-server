@@ -1,6 +1,6 @@
 {
   "editor.minimap.renderCharacters": false,
-  "editor.renderFinalNewline": false,
+  "editor.renderFinalNewline": "off",
   "editor.tabSize": 2,
   "editor.wordWrap": "on",
   "eslint.autoFixOnSave": true,
@@ -47,18 +47,18 @@
   },
   "files.insertFinalNewline": true,
   "files.watcherExclude": {
-      "coverage/**": true,
-      "dist/**": true,
-      "run/**": true,
-      "**/.git/objects/**": true,
-      "**/.git/subtree-cache/**": true,
-      "**/.tsbuildinfo": true,
-      "**/.tsbuildinfo.*": true,
-      "**/logs/**": true,
-      "**/node_modules/**": true,
-      "**/node_modules*/**": true,
-      "**/temp/**": true,
-      "**/tmp/**": true
+    "coverage/**": true,
+    "dist/**": true,
+    "run/**": true,
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true,
+    "**/.tsbuildinfo": true,
+    "**/.tsbuildinfo.*": true,
+    "**/logs/**": true,
+    "**/node_modules/**": true,
+    "**/node_modules*/**": true,
+    "**/temp/**": true,
+    "**/tmp/**": true
   },
   "files.trimTrailingWhitespace": true,
   "search.exclude": {
@@ -87,5 +87,8 @@
     "editor.formatOnSave": true,
     "editor.formatOnPaste": true
   },
-  "git.ignoreLimitWarning": true
+  "git.ignoreLimitWarning": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true
+  }
 }

@@ -1,4 +1,5 @@
 import { Context, controller, get, provide, post, inject } from "midway";
+
 import { GameService } from "./game.service";
 
 @provide()
@@ -6,8 +7,10 @@ import { GameService } from "./game.service";
 export class GameController {
   @inject()
   ctx: Context;
+
   @inject()
   private gameService: GameService;
+
   constructor() {}
 
   @get("/", { middleware: ["authMiddleware", "apiMiddleware"] })
@@ -36,6 +39,7 @@ export class GameController {
     await this.gameService.joinGame(id);
     this.ctx.body = {};
   }
+
   // 离开game
   @post("/:id/quit", { middleware: ["authMiddleware", "apiMiddleware"] })
   public async quitGame(): Promise<void> {
@@ -43,6 +47,7 @@ export class GameController {
     await this.gameService.quitGame(id);
     this.ctx.body = {};
   }
+
   // 加入AI
   @post("/:id/join/ai", { middleware: ["authMiddleware", "apiMiddleware"] })
   public async joinAI(): Promise<void> {
@@ -83,6 +88,7 @@ export class GameController {
     const { _id } = this.ctx.state.user;
     this.ctx.body = await this.gameService.getAchievements(_id);
   }
+
   // 获取某玩家的历史成就
   @get("/history/achievements/:id", {
     middleware: ["authMiddleware", "apiMiddleware"],
